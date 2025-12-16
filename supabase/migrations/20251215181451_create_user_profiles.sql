@@ -4,6 +4,8 @@
 CREATE TABLE IF NOT EXISTS public.user_profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   email TEXT UNIQUE,
+  password TEXT,
+  budget_id UUID,
   full_name TEXT,
   display_name TEXT,
   avatar_url TEXT,
@@ -15,6 +17,13 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
 
 -- Create index on email for faster lookups
 CREATE INDEX IF NOT EXISTS user_profiles_email_idx ON public.user_profiles(email);
+
+-- Create index on budget_id for faster lookups
+CREATE INDEX IF NOT EXISTS user_profiles_budget_id_idx ON public.user_profiles(budget_id);
+
+-- Add foreign key constraint to budgets table
+-- NOTE: This FK constraint is added in a later migration (20251216160058_add_user_profiles_budget_fk.sql)
+-- after the budgets table is created, to ensure proper migration order.
 
 -- Enable Row Level Security
 ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
@@ -75,6 +84,8 @@ CREATE TRIGGER set_updated_at
 
 -- Add comment to table
 COMMENT ON TABLE public.user_profiles IS 'Extended user profiles for budget app users';
+COMMENT ON COLUMN public.user_profiles.password IS 'SECURITY WARNING: If storing passwords, they MUST be hashed (e.g., bcrypt) before storage. Supabase Auth already handles passwords securely in auth.users - this field is only for additional password needs (e.g., app PIN).';
+COMMENT ON COLUMN public.user_profiles.budget_id IS 'Foreign key reference to budgets table. Links user to their budget. If null, user has no budget assigned yet.';
 COMMENT ON COLUMN public.user_profiles.currency_code IS 'ISO 4217 currency code (e.g., USD, EUR, GBP)';
 COMMENT ON COLUMN public.user_profiles.timezone IS 'IANA timezone name (e.g., America/New_York, Europe/London)';
 

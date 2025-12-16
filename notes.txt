@@ -1,0 +1,2 @@
+Research venv and virtual environments
+Research jupyter notebooks and use them to fill in my new table

@@ -21,3 +21,4 @@ npm --version
 echo ""
 echo "Done! You can now install Supabase with: npm install @supabase/supabase-js"
 
+
