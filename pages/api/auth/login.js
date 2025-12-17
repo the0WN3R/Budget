@@ -14,48 +14,45 @@
  * }
  */
 
-// Import supabase inside handler to handle missing env vars gracefully
-let supabase = null
+import { createClient } from '@supabase/supabase-js'
 
-async function getSupabaseClient() {
-  if (!supabase) {
-    try {
-      const { createClient } = await import('@supabase/supabase-js')
-      
-      // Try multiple environment variable names (Vercel might use different names)
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 
-                         process.env.SUPABASE_URL || 
-                         process.env.VERCEL_SUPABASE_URL
-      
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
-                              process.env.SUPABASE_ANON_KEY ||
-                              process.env.VERCEL_SUPABASE_ANON_KEY
-      
-      // Log what we found (but don't log the actual keys for security)
-      console.log('[LOGIN API] Environment check:')
-      console.log('[LOGIN API] NEXT_PUBLIC_SUPABASE_URL exists:', !!process.env.NEXT_PUBLIC_SUPABASE_URL)
-      console.log('[LOGIN API] SUPABASE_URL exists:', !!process.env.SUPABASE_URL)
-      console.log('[LOGIN API] URL value (first 20 chars):', supabaseUrl ? supabaseUrl.substring(0, 20) + '...' : 'MISSING')
-      console.log('[LOGIN API] NEXT_PUBLIC_SUPABASE_ANON_KEY exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-      console.log('[LOGIN API] SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_ANON_KEY)
-      console.log('[LOGIN API] ANON_KEY value (first 20 chars):', supabaseAnonKey ? supabaseAnonKey.substring(0, 20) + '...' : 'MISSING')
-      
-      if (!supabaseUrl || !supabaseAnonKey) {
-        const missing = []
-        if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL')
-        if (!supabaseAnonKey) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY')
-        throw new Error(`Missing Supabase environment variables: ${missing.join(', ')}`)
-      }
-      
-      supabase = createClient(supabaseUrl, supabaseAnonKey)
-      console.log('[LOGIN API] Supabase client initialized successfully')
-    } catch (error) {
-      console.error('[LOGIN API] Failed to initialize Supabase client:', error.message)
-      console.error('[LOGIN API] Full error:', error)
-      throw error
+// Initialize Supabase client with error handling
+let supabaseClient = null
+
+function getSupabaseClient() {
+  if (!supabaseClient) {
+    // Try multiple environment variable names (Vercel might use different names)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 
+                       process.env.SUPABASE_URL
+    
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
+                            process.env.SUPABASE_ANON_KEY
+    
+    // Log what we found (but don't log the actual keys for security)
+    console.log('[LOGIN API] Environment check:')
+    console.log('[LOGIN API] NEXT_PUBLIC_SUPABASE_URL exists:', !!process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('[LOGIN API] SUPABASE_URL exists:', !!process.env.SUPABASE_URL)
+    console.log('[LOGIN API] URL value (first 20 chars):', supabaseUrl ? supabaseUrl.substring(0, 20) + '...' : 'MISSING')
+    console.log('[LOGIN API] NEXT_PUBLIC_SUPABASE_ANON_KEY exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+    console.log('[LOGIN API] SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_ANON_KEY)
+    console.log('[LOGIN API] ANON_KEY exists:', !!supabaseAnonKey)
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      const missing = []
+      if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL')
+      if (!supabaseAnonKey) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY')
+      throw new Error(`Missing Supabase environment variables: ${missing.join(', ')}`)
     }
+    
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+    console.log('[LOGIN API] Supabase client initialized successfully')
   }
-  return supabase
+  return supabaseClient
 }
 
 export default async function handler(req, res) {
@@ -81,8 +78,9 @@ export default async function handler(req, res) {
   }
 
   // Initialize Supabase client (will error if env vars missing)
+  let client
   try {
-    await getSupabaseClient()
+    client = getSupabaseClient()
   } catch (error) {
     console.error('[LOGIN API] Supabase initialization error:', error.message)
     return res.status(500).json({
@@ -94,7 +92,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    const client = await getSupabaseClient()
     const { email, password } = req.body
 
     // Validate required fields
