@@ -22,8 +22,6 @@ let supabaseClient = null
 
 async function getSupabaseClient() {
   if (!supabaseClient) {
-  
-  if (!supabaseClient) {
     // Try multiple environment variable names (Vercel might use different names)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 
                        process.env.SUPABASE_URL
