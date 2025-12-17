@@ -56,6 +56,23 @@ textarea {
   user-select: text;
 }
 
+/* Ensure input and textarea text is black/dark and readable */
+input,
+textarea {
+  color: #111827 !important; /* Black/dark gray text */
+  background-color: #ffffff !important; /* White background */
+}
+
+/* Dark mode and muted mode - keep inputs with light background and dark text */
+.theme-dark input,
+.theme-dark textarea,
+.theme-muted input,
+.theme-muted textarea {
+  color: #111827 !important; /* Black text */
+  background-color: #ffffff !important; /* White background for readability */
+  border-color: #d1d5db !important;
+}
+
 /* Remove highlight on tap/click */
 * {
   -webkit-tap-highlight-color: transparent;
