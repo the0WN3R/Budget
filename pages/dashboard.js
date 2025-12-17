@@ -306,7 +306,7 @@ export default function Dashboard() {
                 variant="secondary"
                 className="w-full"
                 onClick={() => {
-                  alert('Settings coming soon!')
+                  router.push('/settings')
                 }}
               >
                 Settings
