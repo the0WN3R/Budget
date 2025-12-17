@@ -18,7 +18,8 @@
 // This avoids ES module issues on Vercel
 const { getSupabaseClient } = require('../../../lib/supabase-server.js')
 
-export default async function handler(req, res) {
+// Use CommonJS to match the require() for Supabase
+module.exports = async function handler(req, res) {
   // IMPORTANT: Log immediately - this helps us see if the handler is even being called
   const method = req.method
   console.log(`[LOGIN API] ====== HANDLER CALLED ======`)
