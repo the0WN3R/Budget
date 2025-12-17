@@ -55,13 +55,17 @@ function getSupabaseClient() {
   return supabaseClient
 }
 
-export default async function handler(req, res) {
+// Export the handler function
+async function loginHandler(req, res) {
   // Log everything for debugging
   console.log(`[LOGIN API] === REQUEST RECEIVED ===`)
   console.log(`[LOGIN API] Method: ${req.method}`)
   console.log(`[LOGIN API] URL: ${req.url}`)
   console.log(`[LOGIN API] Headers:`, JSON.stringify(req.headers, null, 2))
   console.log(`[LOGIN API] Body exists:`, !!req.body)
+  console.log(`[LOGIN API] Raw method check: req.method === 'POST':`, req.method === 'POST')
+  console.log(`[LOGIN API] Method type:`, typeof req.method)
+  console.log(`[LOGIN API] Method value:`, JSON.stringify(req.method))
   
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
@@ -72,13 +76,15 @@ export default async function handler(req, res) {
     return res.status(200).end()
   }
   
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    console.log(`[LOGIN API] Method ${req.method} not allowed - returning 405`)
+  // Only allow POST requests (check for both uppercase and lowercase, just in case)
+  const method = req.method?.toUpperCase()
+  if (method !== 'POST') {
+    console.log(`[LOGIN API] Method '${req.method}' (normalized: '${method}') not allowed - returning 405`)
     return res.status(405).json({ 
       error: 'Method not allowed',
       message: `This endpoint only accepts POST requests, but received ${req.method}`,
       receivedMethod: req.method,
+      methodType: typeof req.method,
       allowedMethods: ['POST', 'OPTIONS']
     })
   }
@@ -211,8 +217,10 @@ export default async function handler(req, res) {
         error: 'Internal server error',
         message: error.message || 'An unexpected error occurred during login',
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      })
-    }
+    })
   }
 }
+
+// Export as default for Next.js API routes
+export default loginHandler}
 
