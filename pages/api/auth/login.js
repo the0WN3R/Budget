@@ -17,6 +17,9 @@
 import { supabase } from '../../../lib/supabase.js'
 
 export default async function handler(req, res) {
+  // Log method for debugging (helpful on Vercel)
+  console.log(`[LOGIN API] Received ${req.method} request`)
+  
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*')
@@ -27,9 +30,11 @@ export default async function handler(req, res) {
   
   // Only allow POST requests
   if (req.method !== 'POST') {
+    console.log(`[LOGIN API] Method ${req.method} not allowed`)
     return res.status(405).json({ 
       error: 'Method not allowed',
-      message: 'This endpoint only accepts POST requests' 
+      message: `This endpoint only accepts POST requests, but received ${req.method}`,
+      receivedMethod: req.method
     })
   }
 
