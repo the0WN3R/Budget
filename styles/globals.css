@@ -82,32 +82,52 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Override Tailwind classes with theme variables where needed */
-.bg-white {
+/* Theme-aware utilities */
+.theme-light .bg-white,
+.theme-dark .bg-white,
+.theme-muted .bg-white {
   background-color: var(--bg-primary) !important;
 }
 
-.bg-gray-50 {
+.theme-light .bg-gray-50,
+.theme-dark .bg-gray-50,
+.theme-muted .bg-gray-50 {
   background-color: var(--bg-secondary) !important;
 }
 
-.bg-gray-100 {
+.theme-light .bg-gray-100,
+.theme-dark .bg-gray-100,
+.theme-muted .bg-gray-100 {
   background-color: var(--bg-tertiary) !important;
 }
 
-.text-gray-900 {
+.theme-light .text-gray-900,
+.theme-dark .text-gray-900,
+.theme-muted .text-gray-900 {
   color: var(--text-primary) !important;
 }
 
-.text-gray-600 {
+.theme-light .text-gray-600,
+.theme-dark .text-gray-600,
+.theme-muted .text-gray-600 {
   color: var(--text-secondary) !important;
 }
 
-.border-gray-200 {
+.theme-light .text-gray-500,
+.theme-dark .text-gray-500,
+.theme-muted .text-gray-500 {
+  color: var(--text-secondary) !important;
+}
+
+.theme-light .border-gray-200,
+.theme-dark .border-gray-200,
+.theme-muted .border-gray-200 {
   border-color: var(--border-color) !important;
 }
 
-.border-gray-300 {
+.theme-light .border-gray-300,
+.theme-dark .border-gray-300,
+.theme-muted .border-gray-300 {
   border-color: var(--border-color) !important;
 }
 
