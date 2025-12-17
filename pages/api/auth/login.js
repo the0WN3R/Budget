@@ -56,15 +56,14 @@ function getSupabaseClient() {
 }
 
 export default async function handler(req, res) {
-  // Log everything for debugging
-  console.log(`[LOGIN API] === REQUEST RECEIVED ===`)
+  // IMPORTANT: Log immediately - this helps us see if the handler is even being called
+  console.log(`[LOGIN API] ====== HANDLER CALLED ======`)
   console.log(`[LOGIN API] Method: ${req.method}`)
+  console.log(`[LOGIN API] Method type: ${typeof req.method}`)
+  console.log(`[LOGIN API] Method stringified: ${JSON.stringify(req.method)}`)
   console.log(`[LOGIN API] URL: ${req.url}`)
-  console.log(`[LOGIN API] Headers:`, JSON.stringify(req.headers, null, 2))
-  console.log(`[LOGIN API] Body exists:`, !!req.body)
-  console.log(`[LOGIN API] Raw method check: req.method === 'POST':`, req.method === 'POST')
-  console.log(`[LOGIN API] Method type:`, typeof req.method)
-  console.log(`[LOGIN API] Method value:`, JSON.stringify(req.method))
+  console.log(`[LOGIN API] Headers: ${JSON.stringify(Object.keys(req.headers))}`)
+  console.log(`[LOGIN API] Body exists: ${!!req.body}`)
   
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
@@ -75,32 +74,32 @@ export default async function handler(req, res) {
     return res.status(200).end()
   }
   
-  // Only allow POST requests - but be more lenient for debugging
-  const method = req.method?.toUpperCase() || req.method || 'UNKNOWN'
-  const isPost = method === 'POST' || req.method === 'POST' || req.method === 'post'
+  // Check method - be very explicit
+  const rawMethod = req.method
+  const normalizedMethod = rawMethod ? String(rawMethod).toUpperCase().trim() : 'UNDEFINED'
+  const isPost = normalizedMethod === 'POST' || rawMethod === 'POST' || rawMethod === 'post'
+  
+  console.log(`[LOGIN API] Method analysis:`)
+  console.log(`[LOGIN API] - rawMethod: ${JSON.stringify(rawMethod)}`)
+  console.log(`[LOGIN API] - normalizedMethod: ${normalizedMethod}`)
+  console.log(`[LOGIN API] - isPost: ${isPost}`)
   
   if (!isPost) {
-    console.log(`[LOGIN API] Method check failed:`)
-    console.log(`[LOGIN API] - req.method: ${JSON.stringify(req.method)}`)
-    console.log(`[LOGIN API] - method (normalized): ${method}`)
-    console.log(`[LOGIN API] - isPost check: ${isPost}`)
-    
+    console.log(`[LOGIN API] ❌ REJECTING - Method is not POST`)
     return res.status(405).json({ 
       error: 'Method not allowed',
-      message: `This endpoint only accepts POST requests, but received ${req.method || 'undefined'}`,
-      receivedMethod: req.method,
-      normalizedMethod: method,
-      methodType: typeof req.method,
-      allowedMethods: ['POST', 'OPTIONS'],
+      message: `This endpoint only accepts POST requests, but received ${rawMethod || 'undefined'}`,
       debug: {
-        rawMethod: req.method,
-        normalized: method,
+        rawMethod: rawMethod,
+        normalizedMethod: normalizedMethod,
+        methodType: typeof rawMethod,
         isPost: isPost
-      }
+      },
+      allowedMethods: ['POST', 'OPTIONS']
     })
   }
   
-  console.log(`[LOGIN API] POST request validated, proceeding...`)
+  console.log(`[LOGIN API] ✅ POST request confirmed, proceeding...`)
 
   // Initialize Supabase client (will error if env vars missing)
   let client
