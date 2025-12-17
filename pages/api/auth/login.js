@@ -222,5 +222,5 @@ async function loginHandler(req, res) {
 }
 
 // Export as default for Next.js API routes
-export default loginHandler}
+export default loginHandler
 
