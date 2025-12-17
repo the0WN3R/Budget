@@ -64,6 +64,12 @@ export default function Settings() {
 
       const data = await response.json()
 
+      if (!response.ok) {
+        // Response was not ok (4xx or 5xx)
+        setSupportError(data.message || `Error: ${response.status} ${response.statusText}`)
+        return
+      }
+
       if (data.success) {
         setSupportSuccess(true)
         setSupportForm({ subject: '', message: '' })
@@ -71,7 +77,8 @@ export default function Settings() {
         setSupportError(data.message || 'Failed to send support request')
       }
     } catch (err) {
-      setSupportError(err.message || 'Failed to send support request')
+      console.error('Support request error:', err)
+      setSupportError(err.message || 'An unexpected error occurred when sending your request')
     } finally {
       setIsSubmittingSupport(false)
     }
