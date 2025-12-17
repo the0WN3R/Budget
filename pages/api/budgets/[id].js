@@ -35,7 +35,7 @@ async function getAuthenticatedUser(req) {
  * Verify user owns the budget
  */
 async function verifyBudgetOwnership(budgetId, userId) {
-  const supabase = await getSupabaseClient()
+  const supabase = getSupabaseClient() // Synchronous - no await needed
   const { data: budget, error } = await supabase
     .from('budgets')
     .select('id, user_id')
@@ -85,7 +85,7 @@ export default async function handler(req, res) {
     }
 
     // Get Supabase client
-    const supabase = await getSupabaseClient()
+    const supabase = getSupabaseClient() // Synchronous - no await needed
     
     // Handle GET request - Get specific budget
     if (req.method === 'GET') {
