@@ -11,41 +11,8 @@
  * This endpoint is useful for server-side logout operations
  */
 
-// Use dynamic import to avoid module loading issues on Vercel
-let createClient = null
-let supabaseClient = null
-
-async function getSupabaseClient() {
-  if (!createClient) {
-    try {
-      const supabaseModule = await import('@supabase/supabase-js')
-      createClient = supabaseModule.createClient
-    } catch (error) {
-      console.error('[LOGOUT API] Failed to import Supabase:', error)
-      throw new Error('Failed to load Supabase client library')
-    }
-  }
-  
-  if (!supabaseClient) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-    
-    if (!supabaseUrl || !supabaseAnonKey) {
-      const missing = []
-      if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL')
-      if (!supabaseAnonKey) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY')
-      throw new Error(`Missing Supabase environment variables: ${missing.join(', ')}`)
-    }
-    
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    })
-  }
-  return supabaseClient
-}
+// Use CommonJS require to load the server-side helper
+const { getSupabaseClient } = require('../../../lib/supabase-server.js')
 
 export default async function handler(req, res) {
   // Allow both POST and GET requests for logout
@@ -58,7 +25,7 @@ export default async function handler(req, res) {
 
   try {
     // Get Supabase client
-    const supabase = await getSupabaseClient()
+    const supabase = getSupabaseClient() // Synchronous - no await needed
     
     // Get the authorization header to extract the access token
     const authHeader = req.headers.authorization
