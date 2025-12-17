@@ -14,8 +14,32 @@
  * }
  */
 
-// Use CommonJS require for server-side to avoid ES module build issues
-const { getSupabaseClient } = require('../../../lib/supabase-server.js')
+// Use static import - webpack config should handle ESM properly now
+import { createClient } from '@supabase/supabase-js'
+
+let supabaseClient = null
+
+function getSupabaseClient() {
+  if (!supabaseClient) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      const missing = []
+      if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL')
+      if (!supabaseAnonKey) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY')
+      throw new Error(`Missing Supabase environment variables: ${missing.join(', ')}`)
+    }
+    
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+  }
+  return supabaseClient
+}
 
 export default async function handler(req, res) {
   // IMPORTANT: Log immediately - this helps us see if the handler is even being called
@@ -66,7 +90,14 @@ export default async function handler(req, res) {
   // Initialize Supabase client (will error if env vars missing)
   let client
   try {
-    client = getSupabaseClient() // No await needed - it's synchronous
+    client = getSupabaseClient()
+    
+    // Log environment check
+    console.log('[LOGIN API] Environment check:')
+    console.log('[LOGIN API] NEXT_PUBLIC_SUPABASE_URL exists:', !!process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('[LOGIN API] SUPABASE_URL exists:', !!process.env.SUPABASE_URL)
+    console.log('[LOGIN API] NEXT_PUBLIC_SUPABASE_ANON_KEY exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+    console.log('[LOGIN API] SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_ANON_KEY)
   } catch (error) {
     console.error('[LOGIN API] Supabase initialization error:', error)
     console.error('[LOGIN API] Error stack:', error.stack)
