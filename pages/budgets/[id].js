@@ -162,6 +162,12 @@ export default function BudgetView() {
             </Button>
             <Button 
               variant="secondary" 
+              onClick={() => router.push(`/budgets/${id}/tabs`)}
+            >
+              Manage Categories
+            </Button>
+            <Button 
+              variant="secondary" 
               onClick={() => setShowDeleteConfirm(true)}
               className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
             >
