@@ -55,8 +55,7 @@ function getSupabaseClient() {
   return supabaseClient
 }
 
-// Export the handler function
-async function loginHandler(req, res) {
+export default async function handler(req, res) {
   // Log everything for debugging
   console.log(`[LOGIN API] === REQUEST RECEIVED ===`)
   console.log(`[LOGIN API] Method: ${req.method}`)
@@ -217,10 +216,8 @@ async function loginHandler(req, res) {
         error: 'Internal server error',
         message: error.message || 'An unexpected error occurred during login',
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    })
+      })
+    }
   }
 }
-
-// Export as default for Next.js API routes
-export default loginHandler
 
