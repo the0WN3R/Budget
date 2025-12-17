@@ -115,12 +115,30 @@ export default async function handler(req, res) {
   try {
     client = await getSupabaseClient()
   } catch (error) {
-    console.error('[LOGIN API] Supabase initialization error:', error.message)
+    console.error('[LOGIN API] Supabase initialization error:', error)
+    console.error('[LOGIN API] Error stack:', error.stack)
+    
+    // Check environment variables directly for debugging
+    const envCheck = {
+      NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      SUPABASE_URL: !!process.env.SUPABASE_URL,
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      SUPABASE_ANON_KEY: !!process.env.SUPABASE_ANON_KEY,
+      allEnvKeys: Object.keys(process.env).filter(k => k.includes('SUPABASE')).slice(0, 10) // First 10 matching keys
+    }
+    console.error('[LOGIN API] Environment variable check:', envCheck)
+    
     return res.status(500).json({
       error: 'Configuration error',
       message: 'Server configuration error. Please check environment variables are set correctly.',
       details: error.message,
-      help: 'Make sure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in Vercel dashboard, then redeploy.'
+      debug: {
+        hasUrl: !!(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL),
+        hasKey: !!(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY),
+        envKeysFound: envCheck.allEnvKeys,
+        nodeEnv: process.env.NODE_ENV
+      },
+      help: 'Make sure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in Vercel dashboard under Settings > Environment Variables, then redeploy.'
     })
   }
 
