@@ -87,8 +87,9 @@ export default async function handler(req, res) {
     // Get Supabase client
     const supabase = getSupabaseClient() // Synchronous - no await needed
     
-    // Handle GET request - Get specific budget
+    // Handle GET request - Get specific budget with tabs and spending data
     if (req.method === 'GET') {
+      // Get budget details
       const { data: budget, error: budgetError } = await supabase
         .from('budgets')
         .select('*')
@@ -102,9 +103,53 @@ export default async function handler(req, res) {
         })
       }
 
+      // Get budget tabs with amount allocated, ordered by position
+      const { data: tabs, error: tabsError } = await supabase
+        .from('budget_tabs')
+        .select('*')
+        .eq('budget_id', id)
+        .order('position', { ascending: true })
+
+      if (tabsError) {
+        console.error('Error fetching budget tabs:', tabsError)
+        // Continue without tabs rather than failing
+      }
+
+      // Calculate totals and spending for each tab
+      // For now, spending is 0 - we'll add expense tracking later
+      const now = new Date()
+      const currentMonth = now.getMonth()
+      const currentYear = now.getFullYear()
+
+      const tabsWithSpending = (tabs || []).map(tab => {
+        const allocated = parseFloat(tab.amount_allocated || 0)
+        const spent = 0 // TODO: Calculate from expenses table when implemented
+        const left = allocated - spent
+
+        return {
+          ...tab,
+          amount_allocated: allocated,
+          amount_spent: spent,
+          amount_left: left,
+          spent_percentage: allocated > 0 ? (spent / allocated) * 100 : 0
+        }
+      })
+
+      // Calculate total allocated
+      const totalAllocated = tabsWithSpending.reduce((sum, tab) => sum + tab.amount_allocated, 0)
+      const totalSpent = tabsWithSpending.reduce((sum, tab) => sum + tab.amount_spent, 0)
+
       return res.status(200).json({
         success: true,
-        budget: budget
+        budget: {
+          ...budget,
+          tabs: tabsWithSpending,
+          totals: {
+            allocated: totalAllocated,
+            spent: totalSpent,
+            left: totalAllocated - totalSpent
+          }
+        }
       })
     }
 

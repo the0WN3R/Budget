@@ -231,8 +231,7 @@ export default function Dashboard() {
                       </div>
                       <button
                         onClick={() => {
-                          // TODO: Navigate to budget detail page
-                          alert('Budget detail page coming soon!')
+                          router.push(`/budgets/${budget.id}`)
                         }}
                         className="ml-4 text-blue-600 hover:text-blue-700 text-sm font-medium"
                       >
