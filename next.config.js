@@ -5,10 +5,8 @@ const nextConfig = {
   async rewrites() {
     return []
   },
-  // Ensure proper module handling for API routes
-  experimental: {
-    serverComponentsExternalPackages: ['@supabase/supabase-js'],
-  },
+  // Transpile Supabase package for serverless compatibility
+  transpilePackages: ['@supabase/supabase-js'],
 }
 
 module.exports = nextConfig

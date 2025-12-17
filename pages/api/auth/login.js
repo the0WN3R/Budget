@@ -14,20 +14,14 @@
  * }
  */
 
-// Use dynamic import to avoid module loading issues on Vercel
-let createClient = null
+// Use static import - Next.js with transpilePackages should handle this
+// This is the recommended approach for Next.js API routes
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+
 let supabaseClient = null
 
 async function getSupabaseClient() {
-  if (!createClient) {
-    try {
-      const supabaseModule = await import('@supabase/supabase-js')
-      createClient = supabaseModule.createClient
-    } catch (error) {
-      console.error('[LOGIN API] Failed to import Supabase:', error)
-      throw new Error('Failed to load Supabase client library')
-    }
-  }
+  if (!supabaseClient) {
   
   if (!supabaseClient) {
     // Try multiple environment variable names (Vercel might use different names)
@@ -53,7 +47,7 @@ async function getSupabaseClient() {
       throw new Error(`Missing Supabase environment variables: ${missing.join(', ')}`)
     }
     
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    supabaseClient = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
