@@ -19,6 +19,7 @@ export default function BudgetEdit() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    currency_code: 'USD',
   })
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -48,6 +49,7 @@ export default function BudgetEdit() {
         setFormData({
           name: response.budget.name || '',
           description: response.budget.description || '',
+          currency_code: response.budget.currency_code || 'USD',
         })
       } else {
         setError('Failed to load budget')
@@ -84,6 +86,7 @@ export default function BudgetEdit() {
       const response = await budgetAPI.update(id, {
         name: formData.name.trim(),
         description: formData.description.trim() || null,
+        currency_code: formData.currency_code,
       })
 
       if (response.success) {
@@ -199,7 +202,7 @@ export default function BudgetEdit() {
               required
             />
 
-            <div className="mb-6">
+            <div className="mb-4">
               <label
                 htmlFor="description"
                 className="block text-sm font-medium text-gray-700 mb-1"
@@ -217,6 +220,36 @@ export default function BudgetEdit() {
               />
             </div>
 
+            <div className="mb-6">
+              <label
+                htmlFor="currency_code"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Currency <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="currency_code"
+                name="currency_code"
+                value={formData.currency_code}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="USD">USD - US Dollar</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="GBP">GBP - British Pound</option>
+                <option value="JPY">JPY - Japanese Yen</option>
+                <option value="CAD">CAD - Canadian Dollar</option>
+                <option value="AUD">AUD - Australian Dollar</option>
+                <option value="CHF">CHF - Swiss Franc</option>
+                <option value="CNY">CNY - Chinese Yuan</option>
+                <option value="INR">INR - Indian Rupee</option>
+                <option value="MXN">MXN - Mexican Peso</option>
+              </select>
+              <p className="mt-1 text-sm text-gray-500">
+                All amounts in this budget will be displayed in the selected currency
+              </p>
+            </div>
+
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
               <div className="flex">
                 <div className="flex-shrink-0">
@@ -226,8 +259,8 @@ export default function BudgetEdit() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-yellow-800">
-                    <strong>Note:</strong> You can only edit the budget name and description here. 
-                    To modify tabs/categories or currency, please delete and recreate the budget.
+                    <strong>Note:</strong> You can edit the budget name, description, and currency here. 
+                    To modify tabs/categories, please use the tabs management feature (coming soon).
                   </p>
                 </div>
               </div>
