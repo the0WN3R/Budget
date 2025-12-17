@@ -123,15 +123,32 @@ export default async function handler(req, res) {
         // Continue without tabs rather than failing
       }
 
-      // Calculate totals and spending for each tab
-      // For now, spending is 0 - we'll add expense tracking later
-      const now = new Date()
-      const currentMonth = now.getMonth()
-      const currentYear = now.getFullYear()
+      // Calculate totals and spending for each tab from expenses
+      // Get all expenses for this budget
+      const { data: expenses, error: expensesError } = await supabase
+        .from('expenses')
+        .select('tab_id, amount')
+        .eq('budget_id', id)
+
+      if (expensesError) {
+        console.error('Error fetching expenses:', expensesError)
+        // Continue with 0 expenses if query fails
+      }
+
+      // Calculate spent amount per tab
+      const spentByTab = {}
+      if (expenses) {
+        expenses.forEach(expense => {
+          if (!spentByTab[expense.tab_id]) {
+            spentByTab[expense.tab_id] = 0
+          }
+          spentByTab[expense.tab_id] += parseFloat(expense.amount || 0)
+        })
+      }
 
       const tabsWithSpending = (tabs || []).map(tab => {
         const allocated = parseFloat(tab.amount_allocated || 0)
-        const spent = 0 // TODO: Calculate from expenses table when implemented
+        const spent = spentByTab[tab.id] || 0
         const left = allocated - spent
 
         return {

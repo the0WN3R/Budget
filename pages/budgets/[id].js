@@ -157,7 +157,10 @@ export default function BudgetView() {
             )}
           </div>
           <div className="flex space-x-3">
-            <Button variant="primary" onClick={handleEdit}>
+            <Button variant="primary" onClick={() => router.push(`/budgets/${id}/expenses`)}>
+              Log Expenses
+            </Button>
+            <Button variant="secondary" onClick={handleEdit}>
               Edit Budget
             </Button>
             <Button 
