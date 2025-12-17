@@ -297,7 +297,7 @@ export default function Dashboard() {
                 variant="secondary"
                 className="w-full"
                 onClick={() => {
-                  alert('Profile editing coming soon!')
+                  router.push('/profile/edit')
                 }}
               >
                 Edit Profile
