@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [budgets, setBudgets] = useState([])
+  const [budgetsWithTabs, setBudgetsWithTabs] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [budgetsLoading, setBudgetsLoading] = useState(true)
 
@@ -62,7 +63,24 @@ export default function Dashboard() {
       setBudgetsLoading(true)
       const response = await budgetAPI.getAll()
       if (response.success) {
-        setBudgets(response.budgets || [])
+        const budgetsList = response.budgets || []
+        setBudgets(budgetsList)
+        
+        // Load tabs for each budget to check if categories exist
+        const budgetsWithTabsData = await Promise.all(
+          budgetsList.map(async (budget) => {
+            try {
+              const tabsResponse = await budgetAPI.tabs.getAll(budget.id)
+              return {
+                ...budget,
+                hasTabs: tabsResponse.success && tabsResponse.tabs && tabsResponse.tabs.length > 0
+              }
+            } catch (err) {
+              return { ...budget, hasTabs: false }
+            }
+          })
+        )
+        setBudgetsWithTabs(budgetsWithTabsData)
       }
     } catch (error) {
       console.error('Error loading budgets:', error)
@@ -271,12 +289,27 @@ export default function Dashboard() {
           </Card>
 
           <Card title="Getting Started">
-            <div className="space-y-2 text-sm text-gray-600">
-              <p>✅ Account created successfully</p>
-              <p>✅ Profile set up</p>
-              <p>⏳ Create your first budget</p>
-              <p>⏳ Add budget categories</p>
-              <p>⏳ Start tracking expenses</p>
+            <div className="space-y-2 text-sm">
+              <div className={`flex items-center ${user ? 'text-green-600' : 'text-gray-400'}`}>
+                <span className="mr-2">{user ? '✅' : '⏳'}</span>
+                <span>Account created successfully</span>
+              </div>
+              <div className={`flex items-center ${profile ? 'text-green-600' : 'text-gray-400'}`}>
+                <span className="mr-2">{profile ? '✅' : '⏳'}</span>
+                <span>Profile set up</span>
+              </div>
+              <div className={`flex items-center ${budgets.length > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                <span className="mr-2">{budgets.length > 0 ? '✅' : '⏳'}</span>
+                <span>Create your first budget</span>
+              </div>
+              <div className={`flex items-center ${budgetsWithTabs.some(b => b.hasTabs) ? 'text-green-600' : 'text-gray-400'}`}>
+                <span className="mr-2">{budgetsWithTabs.some(b => b.hasTabs) ? '✅' : '⏳'}</span>
+                <span>Add budget categories</span>
+              </div>
+              <div className="flex items-center text-gray-400">
+                <span className="mr-2">⏳</span>
+                <span>Start tracking expenses</span>
+              </div>
             </div>
           </Card>
         </div>
