@@ -14,7 +14,28 @@
  * }
  */
 
-import { supabase } from '../../../lib/supabase.js'
+// Import supabase inside handler to handle missing env vars gracefully
+let supabase = null
+
+async function getSupabaseClient() {
+  if (!supabase) {
+    try {
+      const { createClient } = await import('@supabase/supabase-js')
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Missing Supabase environment variables')
+      }
+      
+      supabase = createClient(supabaseUrl, supabaseAnonKey)
+    } catch (error) {
+      console.error('Failed to initialize Supabase client:', error)
+      throw error
+    }
+  }
+  return supabase
+}
 
 export default async function handler(req, res) {
   // Log method for debugging (helpful on Vercel)
@@ -38,7 +59,20 @@ export default async function handler(req, res) {
     })
   }
 
+  // Initialize Supabase client (will error if env vars missing)
   try {
+    await getSupabaseClient()
+  } catch (error) {
+    console.error('[LOGIN API] Supabase initialization error:', error)
+    return res.status(500).json({
+      error: 'Configuration error',
+      message: 'Server configuration error. Please check environment variables are set correctly.',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    })
+  }
+
+  try {
+    const client = await getSupabaseClient()
     const { email, password } = req.body
 
     // Validate required fields
@@ -59,7 +93,7 @@ export default async function handler(req, res) {
     }
 
     // Sign in the user with Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    const { data: authData, error: authError } = await client.auth.signInWithPassword({
       email,
       password
     })
@@ -94,7 +128,7 @@ export default async function handler(req, res) {
     }
 
     // Fetch user profile from user_profiles table
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await client
       .from('user_profiles')
       .select('*')
       .eq('id', authData.user.id)
@@ -105,7 +139,7 @@ export default async function handler(req, res) {
       console.warn('User profile not found for user:', authData.user.id)
       
       // Try to create profile as fallback
-      const { data: newProfile, error: createError } = await supabase
+      const { data: newProfile, error: createError } = await client
         .from('user_profiles')
         .insert({
           id: authData.user.id,
