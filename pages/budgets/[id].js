@@ -295,10 +295,10 @@ export default function BudgetView() {
         <Card title="Budget Breakdown">
           {budget.tabs && budget.tabs.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-200 table-auto">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5">
                       Tab
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -323,32 +323,32 @@ export default function BudgetView() {
                     
                     return (
                       <tr key={tab.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
+                        <td className="px-6 py-4">
+                          <div className="flex items-start">
                             {tab.color && (
                               <div 
-                                className="w-4 h-4 rounded-full mr-3" 
+                                className="w-4 h-4 rounded-full mr-3 mt-1 flex-shrink-0" 
                                 style={{ backgroundColor: tab.color }}
                               ></div>
                             )}
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">{tab.name}</div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-medium text-gray-900 break-words">{tab.name}</div>
                               {tab.description && (
-                                <div className="text-sm text-gray-500">{tab.description}</div>
+                                <div className="text-sm text-gray-500 break-words mt-1">{tab.description}</div>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatCurrency(tab.amount_allocated)}
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          <div className="whitespace-nowrap">{formatCurrency(tab.amount_allocated)}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600">
-                          {formatCurrency(tab.amount_spent)}
+                        <td className="px-6 py-4 text-sm text-orange-600">
+                          <div className="whitespace-nowrap">{formatCurrency(tab.amount_spent)}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
-                          {formatCurrency(tab.amount_left)}
+                        <td className="px-6 py-4 text-sm text-green-600">
+                          <div className="whitespace-nowrap">{formatCurrency(tab.amount_left)}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4">
                           <div className="w-full bg-gray-200 rounded-full h-2.5">
                             <div
                               className={`h-2.5 rounded-full ${
@@ -361,7 +361,7 @@ export default function BudgetView() {
                               style={{ width: `${Math.min(spentPercentage, 100)}%` }}
                             ></div>
                           </div>
-                          <span className="text-xs text-gray-500 mt-1">
+                          <span className="text-xs text-gray-500 mt-1 block">
                             {spentPercentage.toFixed(1)}%
                           </span>
                         </td>
