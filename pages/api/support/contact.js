@@ -63,21 +63,59 @@ export default async function handler(req, res) {
 
     const userEmail = email || user?.email || 'anonymous@unknown.com'
 
-    // Log the support request
-    // In production, you would:
-    // 1. Send an email to your support team
-    // 2. Create a ticket in your support system
-    // 3. Store in a support_requests table
-    console.log('[SUPPORT REQUEST]', {
-      user_id: user?.id || 'anonymous',
-      email: userEmail,
-      subject: subject.trim(),
-      message: message.trim(),
-      timestamp: new Date().toISOString()
-    })
+    // Send email notification
+    try {
+      const { Resend } = require('resend')
+      const resend = new Resend(process.env.RESEND_API_KEY)
 
-    // For now, we'll just log it and return success
-    // In production, integrate with your email/support system here
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">
+            New Support Request
+          </h2>
+          <div style="margin-top: 20px;">
+            <p><strong>From:</strong> ${userEmail}</p>
+            ${user?.id ? `<p><strong>User ID:</strong> ${user.id}</p>` : ''}
+            <p><strong>Subject:</strong> ${subject.trim()}</p>
+            <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+          </div>
+          <div style="margin-top: 30px; padding: 20px; background-color: #f9fafb; border-left: 4px solid #3b82f6;">
+            <h3 style="margin-top: 0; color: #111827;">Message:</h3>
+            <p style="white-space: pre-wrap; color: #374151;">${message.trim()}</p>
+          </div>
+        </div>
+      `
+
+      const emailResult = await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || 'Budget App <noreply@yourdomain.com>',
+        to: 'lukeockwood@gmail.com',
+        subject: `Support Request: ${subject.trim()}`,
+        html: emailHtml,
+        replyTo: userEmail,
+      })
+
+      console.log('[SUPPORT REQUEST] Email sent:', {
+        user_id: user?.id || 'anonymous',
+        email: userEmail,
+        subject: subject.trim(),
+        messageId: emailResult.id,
+        timestamp: new Date().toISOString()
+      })
+    } catch (emailError) {
+      console.error('[SUPPORT REQUEST] Email error:', emailError)
+      // Log the request even if email fails
+      console.log('[SUPPORT REQUEST]', {
+        user_id: user?.id || 'anonymous',
+        email: userEmail,
+        subject: subject.trim(),
+        message: message.trim(),
+        timestamp: new Date().toISOString(),
+        emailError: emailError.message
+      })
+      
+      // Still return success to user, but log the error
+      // In production, you might want to store in database as backup
+    }
 
     return res.status(200).json({
       success: true,
