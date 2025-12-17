@@ -14,42 +14,9 @@
  * }
  */
 
-// Use createRequire to load Supabase as CommonJS (works on Vercel)
-import { createRequire } from 'module'
-const require = createRequire(import.meta.url)
-
-let supabaseClient = null
-
-function getSupabaseClient() {
-  if (!supabaseClient) {
-    try {
-      // Use require() instead of import - this works on Vercel's CommonJS runtime
-      const { createClient } = require('@supabase/supabase-js')
-      
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-      
-      if (!supabaseUrl || !supabaseAnonKey) {
-        const missing = []
-        if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL')
-        if (!supabaseAnonKey) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY')
-        throw new Error(`Missing Supabase environment variables: ${missing.join(', ')}`)
-      }
-      
-      supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      })
-      console.log('[LOGIN API] Supabase client initialized successfully')
-    } catch (error) {
-      console.error('[LOGIN API] Failed to load Supabase:', error)
-      throw error
-    }
-  }
-  return supabaseClient
-}
+// Use CommonJS require to load the server-side helper
+// This avoids ES module issues on Vercel
+const { getSupabaseClient } = require('../../../lib/supabase-server.js')
 
 export default async function handler(req, res) {
   // IMPORTANT: Log immediately - this helps us see if the handler is even being called
