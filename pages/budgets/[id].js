@@ -322,7 +322,7 @@ export default function BudgetView() {
                       : 0
                     
                     return (
-                      <tr key={tab.id} className="hover:bg-gray-50">
+                      <tr key={tab.id}>
                         <td className="px-6 py-4">
                           <div className="flex items-start">
                             {tab.color && (
