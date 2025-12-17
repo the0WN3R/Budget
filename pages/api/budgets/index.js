@@ -146,11 +146,13 @@ export default async function handler(req, res) {
       // Log for debugging
       console.log('[BUDGETS API] Fetching budgets for user:', user.id)
       
-      // Query budgets using RLS - the RLS policy will filter by user automatically
-      // The user_id in budgets references user_profiles.id, which equals auth.users.id
+      // Query budgets explicitly filtering by user_id
+      // We use user.id directly since budgets.user_id references user_profiles.id
+      // and user_profiles.id equals auth.users.id (the user's UUID)
       const { data: budgets, error: budgetsError } = await supabase
         .from('budgets')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
       if (budgetsError) {
