@@ -14,12 +14,21 @@
  * }
  */
 
-import { createClient } from '@supabase/supabase-js'
-
-// Initialize Supabase client with error handling
+// Use dynamic import to avoid module loading issues on Vercel
+let createClient = null
 let supabaseClient = null
 
-function getSupabaseClient() {
+async function getSupabaseClient() {
+  if (!createClient) {
+    try {
+      const supabaseModule = await import('@supabase/supabase-js')
+      createClient = supabaseModule.createClient
+    } catch (error) {
+      console.error('[LOGIN API] Failed to import Supabase:', error)
+      throw new Error('Failed to load Supabase client library')
+    }
+  }
+  
   if (!supabaseClient) {
     // Try multiple environment variable names (Vercel might use different names)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 
@@ -104,7 +113,7 @@ export default async function handler(req, res) {
   // Initialize Supabase client (will error if env vars missing)
   let client
   try {
-    client = getSupabaseClient()
+    client = await getSupabaseClient()
   } catch (error) {
     console.error('[LOGIN API] Supabase initialization error:', error.message)
     return res.status(500).json({
