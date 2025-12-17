@@ -56,11 +56,16 @@ function getSupabaseClient() {
 }
 
 export default async function handler(req, res) {
-  // Log method for debugging (helpful on Vercel)
-  console.log(`[LOGIN API] Received ${req.method} request`)
+  // Log everything for debugging
+  console.log(`[LOGIN API] === REQUEST RECEIVED ===`)
+  console.log(`[LOGIN API] Method: ${req.method}`)
+  console.log(`[LOGIN API] URL: ${req.url}`)
+  console.log(`[LOGIN API] Headers:`, JSON.stringify(req.headers, null, 2))
+  console.log(`[LOGIN API] Body exists:`, !!req.body)
   
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
+    console.log(`[LOGIN API] Handling OPTIONS preflight`)
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -69,13 +74,16 @@ export default async function handler(req, res) {
   
   // Only allow POST requests
   if (req.method !== 'POST') {
-    console.log(`[LOGIN API] Method ${req.method} not allowed`)
+    console.log(`[LOGIN API] Method ${req.method} not allowed - returning 405`)
     return res.status(405).json({ 
       error: 'Method not allowed',
       message: `This endpoint only accepts POST requests, but received ${req.method}`,
-      receivedMethod: req.method
+      receivedMethod: req.method,
+      allowedMethods: ['POST', 'OPTIONS']
     })
   }
+  
+  console.log(`[LOGIN API] POST request validated, proceeding...`)
 
   // Initialize Supabase client (will error if env vars missing)
   let client
