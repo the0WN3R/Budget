@@ -8,7 +8,41 @@
  * Handles operations on a specific budget
  */
 
-import { supabase } from '../../../lib/supabase.js'
+// Use dynamic import to avoid module loading issues on Vercel
+let createClient = null
+let supabaseClient = null
+
+async function getSupabaseClient() {
+  if (!createClient) {
+    try {
+      const supabaseModule = await import('@supabase/supabase-js')
+      createClient = supabaseModule.createClient
+    } catch (error) {
+      console.error('[BUDGET API] Failed to import Supabase:', error)
+      throw new Error('Failed to load Supabase client library')
+    }
+  }
+  
+  if (!supabaseClient) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      const missing = []
+      if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL')
+      if (!supabaseAnonKey) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY')
+      throw new Error(`Missing Supabase environment variables: ${missing.join(', ')}`)
+    }
+    
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+  }
+  return supabaseClient
+}
 
 /**
  * Helper function to get authenticated user from session
@@ -20,6 +54,7 @@ async function getAuthenticatedUser(req) {
   }
 
   const token = authHeader.substring(7)
+  const supabase = await getSupabaseClient()
   const { data: { user }, error } = await supabase.auth.getUser(token)
   
   if (error || !user) {
@@ -33,6 +68,7 @@ async function getAuthenticatedUser(req) {
  * Verify user owns the budget
  */
 async function verifyBudgetOwnership(budgetId, userId) {
+  const supabase = await getSupabaseClient()
   const { data: budget, error } = await supabase
     .from('budgets')
     .select('id, user_id')
@@ -81,6 +117,9 @@ export default async function handler(req, res) {
       })
     }
 
+    // Get Supabase client
+    const supabase = await getSupabaseClient()
+    
     // Handle GET request - Get specific budget
     if (req.method === 'GET') {
       const { data: budget, error: budgetError } = await supabase
