@@ -1,9 +1,0 @@
-{
-  "functions": {
-    "pages/api/**/*.js": {
-      "runtime": "@vercel/node"
-    }
-  },
-  "rewrites": []
-}
-
