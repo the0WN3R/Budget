@@ -21,16 +21,37 @@ async function getSupabaseClient() {
   if (!supabase) {
     try {
       const { createClient } = await import('@supabase/supabase-js')
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+      
+      // Try multiple environment variable names (Vercel might use different names)
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 
+                         process.env.SUPABASE_URL || 
+                         process.env.VERCEL_SUPABASE_URL
+      
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
+                              process.env.SUPABASE_ANON_KEY ||
+                              process.env.VERCEL_SUPABASE_ANON_KEY
+      
+      // Log what we found (but don't log the actual keys for security)
+      console.log('[LOGIN API] Environment check:')
+      console.log('[LOGIN API] NEXT_PUBLIC_SUPABASE_URL exists:', !!process.env.NEXT_PUBLIC_SUPABASE_URL)
+      console.log('[LOGIN API] SUPABASE_URL exists:', !!process.env.SUPABASE_URL)
+      console.log('[LOGIN API] URL value (first 20 chars):', supabaseUrl ? supabaseUrl.substring(0, 20) + '...' : 'MISSING')
+      console.log('[LOGIN API] NEXT_PUBLIC_SUPABASE_ANON_KEY exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+      console.log('[LOGIN API] SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_ANON_KEY)
+      console.log('[LOGIN API] ANON_KEY value (first 20 chars):', supabaseAnonKey ? supabaseAnonKey.substring(0, 20) + '...' : 'MISSING')
       
       if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error('Missing Supabase environment variables')
+        const missing = []
+        if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL')
+        if (!supabaseAnonKey) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY')
+        throw new Error(`Missing Supabase environment variables: ${missing.join(', ')}`)
       }
       
       supabase = createClient(supabaseUrl, supabaseAnonKey)
+      console.log('[LOGIN API] Supabase client initialized successfully')
     } catch (error) {
-      console.error('Failed to initialize Supabase client:', error)
+      console.error('[LOGIN API] Failed to initialize Supabase client:', error.message)
+      console.error('[LOGIN API] Full error:', error)
       throw error
     }
   }
@@ -63,11 +84,12 @@ export default async function handler(req, res) {
   try {
     await getSupabaseClient()
   } catch (error) {
-    console.error('[LOGIN API] Supabase initialization error:', error)
+    console.error('[LOGIN API] Supabase initialization error:', error.message)
     return res.status(500).json({
       error: 'Configuration error',
       message: 'Server configuration error. Please check environment variables are set correctly.',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: error.message,
+      help: 'Make sure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in Vercel dashboard, then redeploy.'
     })
   }
 
