@@ -20,6 +20,8 @@ export default function BudgetView() {
   const [budget, setBudget] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
     // Check authentication
@@ -55,6 +57,29 @@ export default function BudgetView() {
 
   const handleEdit = () => {
     router.push(`/budgets/${id}/edit`)
+  }
+
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true)
+      setError('')
+      
+      const response = await budgetAPI.delete(id)
+      
+      if (response.success) {
+        // Redirect to dashboard after successful deletion
+        router.push('/dashboard')
+      } else {
+        setError('Failed to delete budget. Please try again.')
+        setIsDeleting(false)
+        setShowDeleteConfirm(false)
+      }
+    } catch (err) {
+      console.error('Error deleting budget:', err)
+      setError(err.message || 'Failed to delete budget. Please try again.')
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
+    }
   }
 
   const formatCurrency = (amount) => {
@@ -131,10 +156,76 @@ export default function BudgetView() {
               <p className="mt-2 text-gray-600">{budget.description}</p>
             )}
           </div>
-          <Button variant="primary" onClick={handleEdit}>
-            Edit Budget
-          </Button>
+          <div className="flex space-x-3">
+            <Button variant="primary" onClick={handleEdit}>
+              Edit Budget
+            </Button>
+            <Button 
+              variant="secondary" 
+              onClick={() => setShowDeleteConfirm(true)}
+              className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
+            >
+              Delete Budget
+            </Button>
+          </div>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm font-medium text-red-800">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+              <div className="p-6">
+                <div className="flex items-center mb-4">
+                  <div className="flex-shrink-0 mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 text-center mb-2">
+                  Delete Budget
+                </h3>
+                <p className="text-sm text-gray-500 text-center mb-6">
+                  Are you sure you want to delete "<strong>{budget.name}</strong>"? This action cannot be undone and will delete all associated tabs and data.
+                </p>
+                <div className="flex space-x-3">
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={isDeleting}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="flex-1 bg-red-600 hover:bg-red-700 border-red-600"
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete Budget'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
