@@ -154,10 +154,11 @@ export default async function handler(req, res) {
     }
 
     // Handle PUT request - Update budget
+    // Only allow updating name and description (not currency or tabs)
     if (req.method === 'PUT') {
-      const { name, description, currency_code } = req.body
+      const { name, description } = req.body
 
-      // Build update object
+      // Build update object - only name and description allowed
       const updates = {}
       if (name !== undefined) {
         if (name.trim() === '') {
@@ -171,20 +172,11 @@ export default async function handler(req, res) {
       if (description !== undefined) {
         updates.description = description?.trim() || null
       }
-      if (currency_code !== undefined) {
-        if (!/^[A-Z]{3}$/.test(currency_code)) {
-          return res.status(400).json({
-            error: 'Validation error',
-            message: 'Currency code must be a valid 3-letter ISO 4217 code'
-          })
-        }
-        updates.currency_code = currency_code
-      }
 
       if (Object.keys(updates).length === 0) {
         return res.status(400).json({
           error: 'Validation error',
-          message: 'No valid fields to update'
+          message: 'No valid fields to update. Only name and description can be updated.'
         })
       }
 
