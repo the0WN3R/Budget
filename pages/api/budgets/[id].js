@@ -124,18 +124,31 @@ export default async function handler(req, res) {
       }
 
       // Calculate totals and spending for each tab from expenses
-      // Get all expenses for this budget
+      // Only count expenses from the current month (monthly budget reset)
+      const now = new Date()
+      const currentYear = now.getFullYear()
+      const currentMonth = now.getMonth() // 0-indexed (0 = January)
+      
+      // Calculate first and last day of current month in YYYY-MM-DD format
+      const firstDayOfMonth = new Date(currentYear, currentMonth, 1)
+        .toISOString().split('T')[0] // YYYY-MM-01
+      const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0)
+        .toISOString().split('T')[0] // YYYY-MM-LastDay
+
+      // Get expenses for this budget from the current month only
       const { data: expenses, error: expensesError } = await supabase
         .from('expenses')
-        .select('tab_id, amount')
+        .select('tab_id, amount, expense_date')
         .eq('budget_id', id)
+        .gte('expense_date', firstDayOfMonth)
+        .lte('expense_date', lastDayOfMonth)
 
       if (expensesError) {
         console.error('Error fetching expenses:', expensesError)
         // Continue with 0 expenses if query fails
       }
 
-      // Calculate spent amount per tab
+      // Calculate spent amount per tab (only from current month)
       const spentByTab = {}
       if (expenses) {
         expenses.forEach(expense => {
