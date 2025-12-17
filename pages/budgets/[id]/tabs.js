@@ -401,16 +401,16 @@ export default function BudgetTabs() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-200 table-auto">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5">
                       Category
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
                       Monthly Allocation
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
                       Actions
                     </th>
                   </tr>
@@ -418,27 +418,27 @@ export default function BudgetTabs() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {tabs.map((tab) => (
                     <tr key={tab.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
+                      <td className="px-6 py-4">
+                        <div className="flex items-start">
                           {tab.color && (
                             <div 
-                              className="w-4 h-4 rounded-full mr-3" 
+                              className="w-4 h-4 rounded-full mr-3 mt-1 flex-shrink-0" 
                               style={{ backgroundColor: tab.color }}
                             ></div>
                           )}
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{tab.name}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium text-gray-900 break-words">{tab.name}</div>
                             {tab.description && (
-                              <div className="text-sm text-gray-500">{tab.description}</div>
+                              <div className="text-sm text-gray-500 break-words mt-1">{tab.description}</div>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatCurrency(tab.amount_allocated)}
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        <div className="whitespace-nowrap">{formatCurrency(tab.amount_allocated)}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-2">
+                      <td className="px-6 py-4 text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-2 whitespace-nowrap">
                           <button
                             onClick={() => handleEdit(tab)}
                             className="text-blue-600 hover:text-blue-900"
