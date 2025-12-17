@@ -61,9 +61,23 @@ export default function Dashboard() {
   const loadBudgets = async () => {
     try {
       setBudgetsLoading(true)
+      
+      // Check session first
+      const session = getSession()
+      if (!session || !session.access_token) {
+        console.error('No session found when loading budgets')
+        router.push('/login')
+        return
+      }
+      
+      console.log('Loading budgets...')
       const response = await budgetAPI.getAll()
+      
+      console.log('Budget API response:', response)
+      
       if (response.success) {
         const budgetsList = response.budgets || []
+        console.log('Budgets loaded:', budgetsList.length)
         setBudgets(budgetsList)
         
         // Load tabs for each budget to check if categories exist
@@ -76,14 +90,26 @@ export default function Dashboard() {
                 hasTabs: tabsResponse.success && tabsResponse.tabs && tabsResponse.tabs.length > 0
               }
             } catch (err) {
+              console.error('Error loading tabs for budget:', budget.id, err)
               return { ...budget, hasTabs: false }
             }
           })
         )
         setBudgetsWithTabs(budgetsWithTabsData)
+      } else {
+        console.error('Budget API returned unsuccessful response:', response)
       }
     } catch (error) {
       console.error('Error loading budgets:', error)
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack
+      })
+      
+      // If it's an auth error, redirect to login
+      if (error.message.includes('Not authenticated') || error.message.includes('Unauthorized')) {
+        router.push('/login')
+      }
     } finally {
       setBudgetsLoading(false)
     }

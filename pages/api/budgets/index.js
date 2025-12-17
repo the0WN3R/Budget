@@ -30,10 +30,11 @@ async function getAuthenticatedUser(req) {
   const { data: { user }, error } = await supabase.auth.getUser(token)
   
   if (error || !user) {
+    console.error('[BUDGETS API] Auth error:', error)
     return null
   }
 
-  return user
+  return { user, token }
 }
 
 /**
@@ -41,18 +42,27 @@ async function getAuthenticatedUser(req) {
  */
 export default async function handler(req, res) {
   try {
-    // Get authenticated user
-    const user = await getAuthenticatedUser(req)
+    // Get authenticated user and token
+    const authResult = await getAuthenticatedUser(req)
     
-    if (!user) {
+    if (!authResult || !authResult.user) {
       return res.status(401).json({
         error: 'Unauthorized',
-        message: 'You must be logged in to create a budget'
+        message: 'You must be logged in to access budgets'
       })
     }
 
-    // Get Supabase client
-    const supabase = getSupabaseClient() // Synchronous - no await needed
+    const { user, token } = authResult
+
+    // Get Supabase client and set the auth context for RLS
+    const supabase = getSupabaseClient()
+    
+    // Set the session so RLS policies work correctly
+    // This is important for queries to work with Row Level Security
+    await supabase.auth.setSession({
+      access_token: token,
+      refresh_token: '' // Not needed for server-side queries
+    })
     
     // Get user profile to ensure it exists and get user_id
     const { data: profile, error: profileError } = await supabase
@@ -139,19 +149,31 @@ export default async function handler(req, res) {
 
     // Handle GET request - Get all budgets for user
     if (req.method === 'GET') {
+      // Log for debugging
+      console.log('[BUDGETS API] Fetching budgets for user:', user.id)
+      
+      // Query budgets using RLS - the RLS policy will filter by user automatically
+      // The user_id in budgets references user_profiles.id, which equals auth.users.id
       const { data: budgets, error: budgetsError } = await supabase
         .from('budgets')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
       if (budgetsError) {
-        console.error('Error fetching budgets:', budgetsError)
+        console.error('[BUDGETS API] Error fetching budgets:', budgetsError)
+        console.error('[BUDGETS API] User ID:', user.id)
+        console.error('[BUDGETS API] Error details:', JSON.stringify(budgetsError, null, 2))
         return res.status(500).json({
           error: 'Database error',
-          message: 'Failed to fetch budgets. Please try again.'
+          message: 'Failed to fetch budgets. Please try again.',
+          debug: process.env.NODE_ENV === 'development' ? {
+            userId: user.id,
+            error: budgetsError
+          } : undefined
         })
       }
+
+      console.log('[BUDGETS API] Found budgets:', budgets?.length || 0)
 
       return res.status(200).json({
         success: true,
