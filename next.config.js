@@ -5,8 +5,6 @@ const nextConfig = {
   async rewrites() {
     return []
   },
-  // Transpile Supabase package for serverless compatibility
-  transpilePackages: ['@supabase/supabase-js'],
 }
 
 module.exports = nextConfig
