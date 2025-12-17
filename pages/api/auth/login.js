@@ -43,16 +43,13 @@ function getSupabaseClient() {
 
 export default async function handler(req, res) {
   // IMPORTANT: Log immediately - this helps us see if the handler is even being called
+  const method = req.method
   console.log(`[LOGIN API] ====== HANDLER CALLED ======`)
-  console.log(`[LOGIN API] Method: ${req.method}`)
-  console.log(`[LOGIN API] Method type: ${typeof req.method}`)
-  console.log(`[LOGIN API] Method stringified: ${JSON.stringify(req.method)}`)
+  console.log(`[LOGIN API] Method: ${method}`)
   console.log(`[LOGIN API] URL: ${req.url}`)
-  console.log(`[LOGIN API] Headers: ${JSON.stringify(Object.keys(req.headers))}`)
-  console.log(`[LOGIN API] Body exists: ${!!req.body}`)
   
   // Handle preflight OPTIONS request
-  if (req.method === 'OPTIONS') {
+  if (method === 'OPTIONS') {
     console.log(`[LOGIN API] Handling OPTIONS preflight`)
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -60,27 +57,13 @@ export default async function handler(req, res) {
     return res.status(200).end()
   }
   
-  // Check method - be very explicit
-  const rawMethod = req.method
-  const normalizedMethod = rawMethod ? String(rawMethod).toUpperCase().trim() : 'UNDEFINED'
-  const isPost = normalizedMethod === 'POST' || rawMethod === 'POST' || rawMethod === 'post'
-  
-  console.log(`[LOGIN API] Method analysis:`)
-  console.log(`[LOGIN API] - rawMethod: ${JSON.stringify(rawMethod)}`)
-  console.log(`[LOGIN API] - normalizedMethod: ${normalizedMethod}`)
-  console.log(`[LOGIN API] - isPost: ${isPost}`)
-  
-  if (!isPost) {
-    console.log(`[LOGIN API] ❌ REJECTING - Method is not POST`)
+  // Simple method check - only allow POST
+  if (method !== 'POST') {
+    console.log(`[LOGIN API] ❌ REJECTING - Method is "${method}", expected POST`)
     return res.status(405).json({ 
       error: 'Method not allowed',
-      message: `This endpoint only accepts POST requests, but received ${rawMethod || 'undefined'}`,
-      debug: {
-        rawMethod: rawMethod,
-        normalizedMethod: normalizedMethod,
-        methodType: typeof rawMethod,
-        isPost: isPost
-      },
+      message: `This endpoint only accepts POST requests, but received ${method || 'undefined'}`,
+      receivedMethod: method,
       allowedMethods: ['POST', 'OPTIONS']
     })
   }
