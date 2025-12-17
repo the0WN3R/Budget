@@ -71,6 +71,7 @@ export default function Signup() {
       // Redirect to dashboard
       router.push('/dashboard')
     } catch (err) {
+      // Use the error message as-is (it will be user-friendly from the API client)
       setError(err.message || 'Signup failed. Please try again.')
       setIsLoading(false)
     }

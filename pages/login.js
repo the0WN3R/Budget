@@ -51,6 +51,7 @@ export default function Login() {
       // Redirect to dashboard
       router.push('/dashboard')
     } catch (err) {
+      // Use the error message as-is (it will be user-friendly from the API client)
       setError(err.message || 'Login failed. Please check your credentials.')
       setIsLoading(false)
     }
