@@ -5,20 +5,9 @@ const nextConfig = {
   async rewrites() {
     return []
   },
-  // Configure webpack to properly handle Supabase ESM
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      // Add .mjs to module extensions
-      config.resolve.extensions.push('.mjs')
-      
-      // Ensure proper handling of ESM modules
-      config.module.rules.push({
-        test: /\.mjs$/,
-        include: /node_modules/,
-        type: 'javascript/auto',
-      })
-    }
-    return config
+  // Externalize Supabase for server-side to avoid ES module issues
+  experimental: {
+    serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
 }
 

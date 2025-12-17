@@ -14,42 +14,39 @@
  * }
  */
 
-// Don't import at module level - use dynamic import in handler to avoid Vercel runtime issues
-let supabaseClient = null
-let createClientFunc = null
+// Use createRequire to load Supabase as CommonJS (works on Vercel)
+import { createRequire } from 'module'
+const require = createRequire(import.meta.url)
 
-async function getSupabaseClient() {
+let supabaseClient = null
+
+function getSupabaseClient() {
   if (!supabaseClient) {
-    // Lazy load Supabase using dynamic import - this works with Vercel's runtime
-    if (!createClientFunc) {
-      try {
-        // Use dynamic import - this works even in serverless environments
-        const supabaseModule = await import('@supabase/supabase-js')
-        createClientFunc = supabaseModule.createClient
-        console.log('[LOGIN API] Successfully loaded Supabase client')
-      } catch (error) {
-        console.error('[LOGIN API] Failed to import Supabase:', error)
-        throw new Error('Failed to load Supabase client library')
+    try {
+      // Use require() instead of import - this works on Vercel's CommonJS runtime
+      const { createClient } = require('@supabase/supabase-js')
+      
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        const missing = []
+        if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL')
+        if (!supabaseAnonKey) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY')
+        throw new Error(`Missing Supabase environment variables: ${missing.join(', ')}`)
       }
+      
+      supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+      console.log('[LOGIN API] Supabase client initialized successfully')
+    } catch (error) {
+      console.error('[LOGIN API] Failed to load Supabase:', error)
+      throw error
     }
-    
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-    
-    if (!supabaseUrl || !supabaseAnonKey) {
-      const missing = []
-      if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL')
-      if (!supabaseAnonKey) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY')
-      throw new Error(`Missing Supabase environment variables: ${missing.join(', ')}`)
-    }
-    
-    supabaseClient = createClientFunc(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    })
-    console.log('[LOGIN API] Supabase client initialized')
   }
   return supabaseClient
 }
@@ -86,7 +83,7 @@ export default async function handler(req, res) {
   // Initialize Supabase client (will error if env vars missing)
   let client
   try {
-    client = await getSupabaseClient() // Now async - needs await
+    client = getSupabaseClient() // Synchronous now - no await needed
     
     // Log environment check
     console.log('[LOGIN API] Environment check:')
