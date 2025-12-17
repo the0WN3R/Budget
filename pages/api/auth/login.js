@@ -17,6 +17,14 @@
 import { supabase } from '../../../lib/supabase.js'
 
 export default async function handler(req, res) {
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    return res.status(200).end()
+  }
+  
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ 
@@ -129,10 +137,16 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Login error:', error)
-    return res.status(500).json({
-      error: 'Internal server error',
-      message: 'An unexpected error occurred during login'
-    })
+    
+    // Ensure we always return JSON, even on unexpected errors
+    // This helps with the "Unexpected end of JSON input" error
+    if (!res.headersSent) {
+      return res.status(500).json({
+        error: 'Internal server error',
+        message: error.message || 'An unexpected error occurred during login',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      })
+    }
   }
 }
 

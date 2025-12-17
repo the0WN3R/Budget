@@ -8,13 +8,15 @@ import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
 import Card from '../components/Card'
 import Button from '../components/Button'
-import { getSession } from '../lib/api'
+import { getSession, budgetAPI } from '../lib/api'
 
 export default function Dashboard() {
   const router = useRouter()
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [budgets, setBudgets] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [budgetsLoading, setBudgetsLoading] = useState(true)
 
   useEffect(() => {
     // Check if user is authenticated
@@ -38,7 +40,36 @@ export default function Dashboard() {
     }
 
     setIsLoading(false)
+    
+    // Load budgets
+    loadBudgets()
   }, [router])
+
+  // Reload budgets when page becomes visible (e.g., after returning from create page)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadBudgets()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
+  const loadBudgets = async () => {
+    try {
+      setBudgetsLoading(true)
+      const response = await budgetAPI.getAll()
+      if (response.success) {
+        setBudgets(response.budgets || [])
+      }
+    } catch (error) {
+      console.error('Error loading budgets:', error)
+    } finally {
+      setBudgetsLoading(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -105,36 +136,114 @@ export default function Dashboard() {
         </Card>
 
         {/* Budgets Overview */}
-        <Card title="Your Budgets">
-          <div className="text-center py-8">
-            <div className="text-gray-400 mb-4">
-              <svg
-                className="mx-auto h-12 w-12"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
+        <Card 
+          title="Your Budgets"
+          className="relative"
+        >
+          {budgetsLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading budgets...</p>
             </div>
-            <p className="text-gray-500 mb-4">No budgets yet</p>
-            <p className="text-sm text-gray-400 mb-6">
-              Create your first budget to start tracking your expenses
-            </p>
-            <Button
-              variant="primary"
-              onClick={() => {
-                alert('Budget creation coming soon!')
-              }}
-            >
-              Create Your First Budget
-            </Button>
-          </div>
+          ) : budgets.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="text-gray-400 mb-4">
+                <svg
+                  className="mx-auto h-12 w-12"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+              </div>
+              <p className="text-gray-500 mb-4">No budgets yet</p>
+              <p className="text-sm text-gray-400 mb-6">
+                Create your first budget to start tracking your expenses
+              </p>
+              <Button
+                variant="primary"
+                onClick={() => router.push('/budgets/new')}
+              >
+                Create Your First Budget
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-sm text-gray-600">
+                  You have {budgets.length} budget{budgets.length !== 1 ? 's' : ''}
+                </p>
+                <Button
+                  variant="primary"
+                  onClick={() => router.push('/budgets/new')}
+                >
+                  + Create New Budget
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {budgets.map((budget) => (
+                  <div
+                    key={budget.id}
+                    className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {budget.name}
+                        </h3>
+                        {budget.description && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            {budget.description}
+                          </p>
+                        )}
+                        <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                          <span className="flex items-center">
+                            <svg
+                              className="w-4 h-4 mr-1"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            {budget.currency_code}
+                          </span>
+                          <span>
+                            Created {new Date(budget.created_at).toLocaleDateString()}
+                          </span>
+                          {profile?.budget_id === budget.id && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          // TODO: Navigate to budget detail page
+                          alert('Budget detail page coming soon!')
+                        }}
+                        className="ml-4 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      >
+                        View →
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Quick Actions */}
