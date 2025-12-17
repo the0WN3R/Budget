@@ -11,7 +11,7 @@
  */
 
 // Use CommonJS require to load the server-side helper
-const { getSupabaseClient } = require('../../../lib/supabase-server.js')
+const { getSupabaseClient, getAuthenticatedSupabaseClient } = require('../../../lib/supabase-server.js')
 
 /**
  * Helper function to get authenticated user from session
@@ -24,7 +24,7 @@ async function getAuthenticatedUser(req) {
   }
 
   const token = authHeader.substring(7)
-  const supabase = getSupabaseClient() // Synchronous - no await needed
+  const supabase = getSupabaseClient()
   
   // Verify the token and get user
   const { data: { user }, error } = await supabase.auth.getUser(token)
@@ -54,15 +54,9 @@ export default async function handler(req, res) {
 
     const { user, token } = authResult
 
-    // Get Supabase client and set the auth context for RLS
-    const supabase = getSupabaseClient()
-    
-    // Set the session so RLS policies work correctly
-    // This is important for queries to work with Row Level Security
-    await supabase.auth.setSession({
-      access_token: token,
-      refresh_token: '' // Not needed for server-side queries
-    })
+    // Get authenticated Supabase client with user's access token
+    // This ensures RLS policies work correctly by setting auth context
+    const supabase = getAuthenticatedSupabaseClient(token)
     
     // Get user profile to ensure it exists and get user_id
     const { data: profile, error: profileError } = await supabase
