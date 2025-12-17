@@ -456,6 +456,26 @@ export default function BudgetTabs() {
                   </tr>
                 </tfoot>
               </table>
+              {/* Add Category Button Below Table */}
+              {!showAddForm && (
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      setShowAddForm(true)
+                      setEditingTab(null)
+                      resetForm()
+                      // Scroll to form smoothly
+                      setTimeout(() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }, 100)
+                    }}
+                    className="w-full"
+                  >
+                    + Add Another Category
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </Card>
