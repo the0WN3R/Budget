@@ -9,7 +9,7 @@
  * Handles tab/category management for budgets
  */
 
-const { getSupabaseClient } = require('../../../../lib/supabase-server.js')
+const { getSupabaseClient, getAuthenticatedSupabaseClient } = require('../../../../lib/supabase-server.js')
 
 /**
  * Helper function to get authenticated user from session
@@ -28,14 +28,14 @@ async function getAuthenticatedUser(req) {
     return null
   }
 
-  return user
+  return { user, token }
 }
 
 /**
  * Verify user owns the budget
  */
-async function verifyBudgetOwnership(budgetId, userId) {
-  const supabase = getSupabaseClient()
+async function verifyBudgetOwnership(budgetId, userId, token) {
+  const supabase = getAuthenticatedSupabaseClient(token)
   const { data: budget, error } = await supabase
     .from('budgets')
     .select('id, user_id')
@@ -55,16 +55,17 @@ async function verifyBudgetOwnership(budgetId, userId) {
 
 export default async function handler(req, res) {
   try {
-    // Get authenticated user
-    const user = await getAuthenticatedUser(req)
+    // Get authenticated user and token
+    const authResult = await getAuthenticatedUser(req)
     
-    if (!user) {
+    if (!authResult || !authResult.user) {
       return res.status(401).json({
         error: 'Unauthorized',
         message: 'You must be logged in to access this resource'
       })
     }
 
+    const { user, token } = authResult
     const { id } = req.query
 
     if (!id) {
@@ -75,7 +76,7 @@ export default async function handler(req, res) {
     }
 
     // Verify user owns this budget
-    const { valid } = await verifyBudgetOwnership(id, user.id)
+    const { valid } = await verifyBudgetOwnership(id, user.id, token)
     
     if (!valid) {
       return res.status(404).json({
@@ -84,7 +85,7 @@ export default async function handler(req, res) {
       })
     }
 
-    const supabase = getSupabaseClient()
+    const supabase = getAuthenticatedSupabaseClient(token)
 
     // Handle GET request - Get all tabs for budget
     if (req.method === 'GET') {

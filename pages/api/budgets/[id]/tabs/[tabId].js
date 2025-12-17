@@ -7,7 +7,7 @@
  * Handles individual tab operations
  */
 
-const { getSupabaseClient } = require('../../../../../lib/supabase-server.js')
+const { getSupabaseClient, getAuthenticatedSupabaseClient } = require('../../../../../lib/supabase-server.js')
 
 /**
  * Helper function to get authenticated user from session
@@ -26,14 +26,14 @@ async function getAuthenticatedUser(req) {
     return null
   }
 
-  return user
+  return { user, token }
 }
 
 /**
  * Verify user owns the budget and tab
  */
-async function verifyTabOwnership(budgetId, tabId, userId) {
-  const supabase = getSupabaseClient()
+async function verifyTabOwnership(budgetId, tabId, userId, token) {
+  const supabase = getAuthenticatedSupabaseClient(token)
   
   // Get tab and verify it belongs to user's budget
   const { data: tab, error: tabError } = await supabase
@@ -70,16 +70,17 @@ async function verifyTabOwnership(budgetId, tabId, userId) {
 
 export default async function handler(req, res) {
   try {
-    // Get authenticated user
-    const user = await getAuthenticatedUser(req)
+    // Get authenticated user and token
+    const authResult = await getAuthenticatedUser(req)
     
-    if (!user) {
+    if (!authResult || !authResult.user) {
       return res.status(401).json({
         error: 'Unauthorized',
         message: 'You must be logged in to access this resource'
       })
     }
 
+    const { user, token } = authResult
     const { id, tabId } = req.query
 
     if (!id || !tabId) {
@@ -90,7 +91,7 @@ export default async function handler(req, res) {
     }
 
     // Verify user owns this budget and tab
-    const { valid } = await verifyTabOwnership(id, tabId, user.id)
+    const { valid } = await verifyTabOwnership(id, tabId, user.id, token)
     
     if (!valid) {
       return res.status(404).json({
@@ -99,7 +100,7 @@ export default async function handler(req, res) {
       })
     }
 
-    const supabase = getSupabaseClient()
+    const supabase = getAuthenticatedSupabaseClient(token)
 
     // Handle PUT request - Update a tab
     if (req.method === 'PUT') {
