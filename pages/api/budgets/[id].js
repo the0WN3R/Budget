@@ -9,7 +9,7 @@
  */
 
 // Use CommonJS require to load the server-side helper
-const { getSupabaseClient } = require('../../../lib/supabase-server.js')
+const { getSupabaseClient, getAuthenticatedSupabaseClient } = require('../../../lib/supabase-server.js')
 
 /**
  * Helper function to get authenticated user from session
@@ -21,21 +21,23 @@ async function getAuthenticatedUser(req) {
   }
 
   const token = authHeader.substring(7)
-  const supabase = getSupabaseClient() // Synchronous - no await needed
+  const supabase = getSupabaseClient()
   const { data: { user }, error } = await supabase.auth.getUser(token)
   
   if (error || !user) {
+    console.error('[BUDGET API] Auth error:', error)
     return null
   }
 
-  return user
+  return { user, token }
 }
 
 /**
  * Verify user owns the budget
  */
-async function verifyBudgetOwnership(budgetId, userId) {
-  const supabase = getSupabaseClient() // Synchronous - no await needed
+async function verifyBudgetOwnership(budgetId, userId, token) {
+  // Use authenticated client to ensure RLS works correctly
+  const supabase = getAuthenticatedSupabaseClient(token)
   const { data: budget, error } = await supabase
     .from('budgets')
     .select('id, user_id')
@@ -43,10 +45,12 @@ async function verifyBudgetOwnership(budgetId, userId) {
     .single()
 
   if (error || !budget) {
+    console.error('[BUDGET API] Budget ownership check error:', error)
     return { valid: false, budget: null }
   }
 
   if (budget.user_id !== userId) {
+    console.error('[BUDGET API] User ID mismatch:', { budgetUserId: budget.user_id, requestUserId: userId })
     return { valid: false, budget: null }
   }
 
@@ -55,16 +59,17 @@ async function verifyBudgetOwnership(budgetId, userId) {
 
 export default async function handler(req, res) {
   try {
-    // Get authenticated user
-    const user = await getAuthenticatedUser(req)
+    // Get authenticated user and token
+    const authResult = await getAuthenticatedUser(req)
     
-    if (!user) {
+    if (!authResult || !authResult.user) {
       return res.status(401).json({
         error: 'Unauthorized',
         message: 'You must be logged in to access this resource'
       })
     }
 
+    const { user, token } = authResult
     const { id } = req.query
 
     if (!id) {
@@ -74,18 +79,21 @@ export default async function handler(req, res) {
       })
     }
 
-    // Verify user owns this budget
-    const { valid, budget: existingBudget } = await verifyBudgetOwnership(id, user.id)
+    console.log('[BUDGET API] Fetching budget:', id, 'for user:', user.id)
+
+    // Verify user owns this budget using authenticated client
+    const { valid, budget: existingBudget } = await verifyBudgetOwnership(id, user.id, token)
     
     if (!valid) {
+      console.error('[BUDGET API] Budget ownership verification failed')
       return res.status(404).json({
         error: 'Not found',
         message: 'Budget not found or you do not have permission to access it'
       })
     }
 
-    // Get Supabase client
-    const supabase = getSupabaseClient() // Synchronous - no await needed
+    // Get authenticated Supabase client for queries
+    const supabase = getAuthenticatedSupabaseClient(token)
     
     // Handle GET request - Get specific budget with tabs and spending data
     if (req.method === 'GET') {
