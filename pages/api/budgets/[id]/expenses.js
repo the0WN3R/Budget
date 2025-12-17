@@ -52,7 +52,7 @@ async function verifyBudgetOwnership(budgetId, userId, token) {
   return { valid: true, budget }
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   try {
     const authResult = await getAuthenticatedUser(req)
     if (!authResult || !authResult.user) {
