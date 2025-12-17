@@ -91,6 +91,18 @@ export default function BudgetTabs() {
     setShowAddForm(false)
   }
 
+  const prepareAddForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      amount_allocated: '',
+      color: '#3B82F6',
+    })
+    setEditingTab(null)
+    setShowAddForm(true)
+    setError('')
+  }
+
   const handleAdd = async (e) => {
     e.preventDefault()
     setError('')
@@ -374,7 +386,7 @@ export default function BudgetTabs() {
           title="Categories"
           action={
             !showAddForm && (
-              <Button variant="primary" onClick={() => setShowAddForm(true)}>
+              <Button variant="primary" onClick={prepareAddForm}>
                 + Add Category
               </Button>
             )
@@ -383,7 +395,7 @@ export default function BudgetTabs() {
           {tabs.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500 mb-4">No categories yet.</p>
-              <Button variant="primary" onClick={() => setShowAddForm(true)}>
+              <Button variant="primary" onClick={prepareAddForm}>
                 Add Your First Category
               </Button>
             </div>
@@ -462,9 +474,7 @@ export default function BudgetTabs() {
                   <Button
                     variant="primary"
                     onClick={() => {
-                      setShowAddForm(true)
-                      setEditingTab(null)
-                      resetForm()
+                      prepareAddForm()
                       // Scroll to form smoothly
                       setTimeout(() => {
                         window.scrollTo({ top: 0, behavior: 'smooth' })
