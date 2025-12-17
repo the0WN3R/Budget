@@ -82,10 +82,20 @@ export default async function handler(req, res) {
 
     if (authError) {
       // Handle specific Supabase auth errors
-      if (authError.message.includes('already registered')) {
+      // Check for various "user already exists" error messages from Supabase
+      const errorMessage = authError.message.toLowerCase()
+      const isExistingUser = 
+        errorMessage.includes('already registered') ||
+        errorMessage.includes('user already registered') ||
+        errorMessage.includes('email address is already registered') ||
+        errorMessage.includes('a user with this email already exists') ||
+        authError.status === 422 // Supabase often returns 422 for duplicate users
+
+      if (isExistingUser) {
         return res.status(409).json({
           error: 'User already exists',
-          message: 'An account with this email already exists. Please try logging in instead.'
+          message: 'An account with this email already exists. Please try logging in instead.',
+          code: 'EMAIL_ALREADY_EXISTS'
         })
       }
 
