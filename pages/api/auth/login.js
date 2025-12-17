@@ -75,16 +75,28 @@ export default async function handler(req, res) {
     return res.status(200).end()
   }
   
-  // Only allow POST requests (check for both uppercase and lowercase, just in case)
-  const method = req.method?.toUpperCase()
-  if (method !== 'POST') {
-    console.log(`[LOGIN API] Method '${req.method}' (normalized: '${method}') not allowed - returning 405`)
+  // Only allow POST requests - but be more lenient for debugging
+  const method = req.method?.toUpperCase() || req.method || 'UNKNOWN'
+  const isPost = method === 'POST' || req.method === 'POST' || req.method === 'post'
+  
+  if (!isPost) {
+    console.log(`[LOGIN API] Method check failed:`)
+    console.log(`[LOGIN API] - req.method: ${JSON.stringify(req.method)}`)
+    console.log(`[LOGIN API] - method (normalized): ${method}`)
+    console.log(`[LOGIN API] - isPost check: ${isPost}`)
+    
     return res.status(405).json({ 
       error: 'Method not allowed',
-      message: `This endpoint only accepts POST requests, but received ${req.method}`,
+      message: `This endpoint only accepts POST requests, but received ${req.method || 'undefined'}`,
       receivedMethod: req.method,
+      normalizedMethod: method,
       methodType: typeof req.method,
-      allowedMethods: ['POST', 'OPTIONS']
+      allowedMethods: ['POST', 'OPTIONS'],
+      debug: {
+        rawMethod: req.method,
+        normalized: method,
+        isPost: isPost
+      }
     })
   }
   
