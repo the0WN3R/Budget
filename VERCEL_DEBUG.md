@@ -2,7 +2,26 @@
 
 Since your app works on `localhost:3000` but not on Vercel, let's diagnose the issue.
 
-## Step 1: Test the Debug Endpoint
+## Step 1: Test the Method Endpoint
+
+After Vercel redeploys, test what method Vercel is receiving:
+
+**In your browser console on the Vercel site, run:**
+```javascript
+// Test GET
+fetch('/api/test-method').then(r => r.json()).then(console.log)
+
+// Test POST  
+fetch('/api/test-method', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ test: 'data' })
+}).then(r => r.json()).then(console.log)
+```
+
+This will show you what method Vercel is actually receiving.
+
+## Step 2: Test the Debug Endpoint
 
 After Vercel redeploys, visit:
 ```
