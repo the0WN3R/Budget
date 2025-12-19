@@ -6,9 +6,11 @@
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { getSession, clearSession } from '../lib/api'
+import useMobile from '../hooks/useMobile'
 
 export default function Layout({ children, requiresAuth = false }) {
   const router = useRouter()
+  const isMobile = useMobile()
   const [isLoading, setIsLoading] = useState(requiresAuth)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
@@ -51,7 +53,7 @@ export default function Layout({ children, requiresAuth = false }) {
       {/* Navigation Bar */}
       {(requiresAuth || isAuthenticated) && (
         <nav className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className={isMobile ? "px-4" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"}>
             <div className="flex justify-between h-16">
               <div className="flex items-center">
                 <h1 className="text-xl font-bold text-blue-600">Budget App</h1>
@@ -76,13 +78,13 @@ export default function Layout({ children, requiresAuth = false }) {
       )}
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className={isMobile ? "px-2 py-4" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"}>
         {children}
       </main>
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className={isMobile ? "px-4 py-4" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4"}>
           <p className="text-center text-gray-500 text-sm">
             © 2024 Budget App. Built with Next.js & Supabase.
           </p>

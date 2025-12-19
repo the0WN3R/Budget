@@ -10,6 +10,7 @@ import Card from '../../components/Card'
 import Button from '../../components/Button'
 import { getSession, budgetAPI } from '../../lib/api'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+import useMobile from '../../hooks/useMobile'
 
 // Color palette for pie chart
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16']
@@ -17,6 +18,7 @@ const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'
 export default function BudgetView() {
   const router = useRouter()
   const { id } = router.query
+  const isMobile = useMobile()
   const [budget, setBudget] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -138,10 +140,10 @@ export default function BudgetView() {
 
   return (
     <Layout requiresAuth>
-      <div className="space-y-6">
+      <div className={isMobile ? "space-y-4 w-full" : "space-y-6"}>
         {/* Header */}
-        <div className="flex justify-between items-start">
-          <div>
+        <div className={isMobile ? "flex flex-col space-y-4 w-full" : "flex justify-between items-start"}>
+          <div className={isMobile ? "w-full" : ""}>
             <button
               onClick={() => router.push('/dashboard')}
               className="text-sm text-gray-600 hover:text-gray-900 mb-2 flex items-center"
@@ -151,34 +153,43 @@ export default function BudgetView() {
               </svg>
               Back to Dashboard
             </button>
-            <h1 className="text-3xl font-bold text-gray-900">{budget.name}</h1>
+            <h1 className={isMobile ? "text-2xl font-bold text-gray-900" : "text-3xl font-bold text-gray-900"}>{budget.name}</h1>
             {budget.description && (
-              <p className="mt-2 text-gray-600">{budget.description}</p>
+              <p className={isMobile ? "mt-1 text-sm text-gray-600" : "mt-2 text-gray-600"}>{budget.description}</p>
             )}
             <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-50 text-blue-700 border border-blue-200">
               <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span>Monthly Budget - {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+              <span className={isMobile ? "text-xs" : ""}>Monthly Budget - {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
             </div>
           </div>
-          <div className="flex space-x-3">
-            <Button variant="primary" onClick={() => router.push(`/budgets/${id}/expenses`)}>
+          <div className={isMobile ? "flex flex-wrap gap-2 w-full" : "flex space-x-3"}>
+            <Button 
+              variant="primary" 
+              onClick={() => router.push(`/budgets/${id}/expenses`)}
+              className={isMobile ? "flex-1 min-w-[48%] text-sm py-2" : ""}
+            >
               Log Expenses
             </Button>
-            <Button variant="secondary" onClick={handleEdit}>
+            <Button 
+              variant="secondary" 
+              onClick={handleEdit}
+              className={isMobile ? "flex-1 min-w-[48%] text-sm py-2" : ""}
+            >
               Edit Budget
             </Button>
             <Button 
               variant="secondary" 
               onClick={() => router.push(`/budgets/${id}/tabs`)}
+              className={isMobile ? "flex-1 min-w-[48%] text-sm py-2" : ""}
             >
               Manage Categories
             </Button>
             <Button 
               variant="secondary" 
               onClick={() => setShowDeleteConfirm(true)}
-              className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
+              className={isMobile ? "flex-1 min-w-[48%] text-sm py-2 bg-red-50 text-red-600 hover:bg-red-100 border-red-200" : "bg-red-50 text-red-600 hover:bg-red-100 border-red-200"}
             >
               Delete Budget
             </Button>
@@ -243,27 +254,27 @@ export default function BudgetView() {
         )}
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className={isMobile ? "grid grid-cols-1 gap-3 w-full" : "grid grid-cols-1 md:grid-cols-3 gap-6"}>
           <Card>
-            <div className="p-4">
-              <p className="text-sm font-medium text-gray-500">Total Allocated</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
+            <div className={isMobile ? "p-3" : "p-4"}>
+              <p className={isMobile ? "text-xs font-medium text-gray-500" : "text-sm font-medium text-gray-500"}>Total Allocated</p>
+              <p className={isMobile ? "text-xl font-bold text-gray-900 mt-1" : "text-2xl font-bold text-gray-900 mt-1"}>
                 {formatCurrency(budget.totals?.allocated || 0)}
               </p>
             </div>
           </Card>
           <Card>
-            <div className="p-4">
-              <p className="text-sm font-medium text-gray-500">Amount Spent</p>
-              <p className="text-2xl font-bold text-orange-600 mt-1">
+            <div className={isMobile ? "p-3" : "p-4"}>
+              <p className={isMobile ? "text-xs font-medium text-gray-500" : "text-sm font-medium text-gray-500"}>Amount Spent</p>
+              <p className={isMobile ? "text-xl font-bold text-orange-600 mt-1" : "text-2xl font-bold text-orange-600 mt-1"}>
                 {formatCurrency(budget.totals?.spent || 0)}
               </p>
             </div>
           </Card>
           <Card>
-            <div className="p-4">
-              <p className="text-sm font-medium text-gray-500">Amount Left</p>
-              <p className="text-2xl font-bold text-green-600 mt-1">
+            <div className={isMobile ? "p-3" : "p-4"}>
+              <p className={isMobile ? "text-xs font-medium text-gray-500" : "text-sm font-medium text-gray-500"}>Amount Left</p>
+              <p className={isMobile ? "text-xl font-bold text-green-600 mt-1" : "text-2xl font-bold text-green-600 mt-1"}>
                 {formatCurrency(budget.totals?.left || 0)}
               </p>
             </div>
@@ -273,8 +284,8 @@ export default function BudgetView() {
         {/* Pie Chart */}
         {chartData.length > 0 && (
           <Card title="Budget Allocation">
-            <div className="py-6">
-              <ResponsiveContainer width="100%" height={400}>
+            <div className={isMobile ? "py-3" : "py-6"}>
+              <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
                 <PieChart>
                   <Pie
                     data={chartData}
@@ -282,7 +293,7 @@ export default function BudgetView() {
                     cy="50%"
                     labelLine={false}
                     label={renderLabel}
-                    outerRadius={120}
+                    outerRadius={isMobile ? 80 : 120}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -293,7 +304,7 @@ export default function BudgetView() {
                   <Tooltip 
                     formatter={(value) => formatCurrency(value)}
                   />
-                  <Legend />
+                  <Legend wrapperStyle={isMobile ? { fontSize: '12px' } : {}} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -303,23 +314,23 @@ export default function BudgetView() {
         {/* Spending Table */}
         <Card title="Budget Breakdown">
           {budget.tabs && budget.tabs.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 table-auto">
+            <div className="overflow-x-auto w-full">
+              <table className={isMobile ? "min-w-full divide-y divide-gray-200 table-auto text-xs" : "min-w-full divide-y divide-gray-200 table-auto"}>
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5">
+                    <th className={isMobile ? "px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5" : "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5"}>
                       Tab
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount Allocated
+                    <th className={isMobile ? "px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" : "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"}>
+                      Allocated
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount Spent
+                    <th className={isMobile ? "px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" : "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"}>
+                      Spent
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount Left
+                    <th className={isMobile ? "px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" : "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"}>
+                      Left
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className={isMobile ? "px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" : "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"}>
                       Progress
                     </th>
                   </tr>
@@ -332,32 +343,32 @@ export default function BudgetView() {
                     
                     return (
                       <tr key={tab.id}>
-                        <td className="px-6 py-4">
+                        <td className={isMobile ? "px-2 py-3" : "px-6 py-4"}>
                           <div className="flex items-start">
                             {tab.color && (
                               <div 
-                                className="w-4 h-4 rounded-full mr-3 mt-1 flex-shrink-0" 
+                                className={isMobile ? "w-3 h-3 rounded-full mr-2 mt-0.5 flex-shrink-0" : "w-4 h-4 rounded-full mr-3 mt-1 flex-shrink-0"} 
                                 style={{ backgroundColor: tab.color }}
                               ></div>
                             )}
                             <div className="min-w-0 flex-1">
-                              <div className="text-sm font-medium text-gray-900 break-words">{tab.name}</div>
+                              <div className={isMobile ? "text-xs font-medium text-gray-900 break-words" : "text-sm font-medium text-gray-900 break-words"}>{tab.name}</div>
                               {tab.description && (
-                                <div className="text-sm text-gray-500 break-words mt-1">{tab.description}</div>
+                                <div className={isMobile ? "text-xs text-gray-500 break-words mt-0.5" : "text-sm text-gray-500 break-words mt-1"}>{tab.description}</div>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
+                        <td className={isMobile ? "px-2 py-3 text-xs text-gray-900" : "px-6 py-4 text-sm text-gray-900"}>
                           <div className="whitespace-nowrap">{formatCurrency(tab.amount_allocated)}</div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-orange-600">
+                        <td className={isMobile ? "px-2 py-3 text-xs text-orange-600" : "px-6 py-4 text-sm text-orange-600"}>
                           <div className="whitespace-nowrap">{formatCurrency(tab.amount_spent)}</div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-green-600">
+                        <td className={isMobile ? "px-2 py-3 text-xs text-green-600" : "px-6 py-4 text-sm text-green-600"}>
                           <div className="whitespace-nowrap">{formatCurrency(tab.amount_left)}</div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className={isMobile ? "px-2 py-3" : "px-6 py-4"}>
                           <div className="w-full bg-gray-200 rounded-full h-2.5">
                             <div
                               className={`h-2.5 rounded-full ${
@@ -370,7 +381,7 @@ export default function BudgetView() {
                               style={{ width: `${Math.min(spentPercentage, 100)}%` }}
                             ></div>
                           </div>
-                          <span className="text-xs text-gray-500 mt-1 block">
+                          <span className={isMobile ? "text-xs text-gray-500 mt-0.5 block" : "text-xs text-gray-500 mt-1 block"}>
                             {spentPercentage.toFixed(1)}%
                           </span>
                         </td>
