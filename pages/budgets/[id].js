@@ -101,11 +101,11 @@ export default function BudgetView() {
     color: tab.color || COLORS[index % COLORS.length]
   })).filter(item => item.value > 0) || []
 
-  // Custom label for pie chart showing percentage
+  // Custom label for pie chart showing percentage only
   const renderLabel = (entry) => {
     const total = chartData.reduce((sum, item) => sum + item.value, 0)
     const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(1) : 0
-    return `${entry.name}: ${percentage}%`
+    return `${percentage}%`
   }
 
   if (isLoading) {
