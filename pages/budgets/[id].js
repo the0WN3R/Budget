@@ -284,12 +284,12 @@ export default function BudgetView() {
         {/* Pie Chart */}
         {chartData.length > 0 && (
           <Card title="Budget Allocation">
-            <div className={isMobile ? "py-3" : "py-6"}>
+            <div className={isMobile ? "py-3 px-2 overflow-visible" : "py-6"}>
               <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
-                <PieChart>
+                <PieChart margin={isMobile ? { top: 10, right: 10, bottom: 10, left: 20 } : { top: 20, right: 20, bottom: 20, left: 20 }}>
                   <Pie
                     data={chartData}
-                    cx="50%"
+                    cx={isMobile ? "55%" : "50%"}
                     cy="50%"
                     labelLine={false}
                     label={renderLabel}
