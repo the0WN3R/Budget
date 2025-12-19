@@ -16,6 +16,7 @@ export default function Dashboard() {
   const [profile, setProfile] = useState(null)
   const [budgets, setBudgets] = useState([])
   const [budgetsWithTabs, setBudgetsWithTabs] = useState([])
+  const [hasExpenses, setHasExpenses] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [budgetsLoading, setBudgetsLoading] = useState(true)
 
@@ -80,22 +81,40 @@ export default function Dashboard() {
         console.log('Budgets loaded:', budgetsList.length)
         setBudgets(budgetsList)
         
-        // Load tabs for each budget to check if categories exist
+        // Load tabs and expenses for each budget to check if categories exist and expenses have been logged
         const budgetsWithTabsData = await Promise.all(
           budgetsList.map(async (budget) => {
             try {
               const tabsResponse = await budgetAPI.tabs.getAll(budget.id)
+              const hasTabs = tabsResponse.success && tabsResponse.tabs && tabsResponse.tabs.length > 0
+              
+              // Check if this budget has any expenses
+              let hasExpensesForBudget = false
+              if (hasTabs) {
+                try {
+                  const expensesResponse = await budgetAPI.expenses.getAll(budget.id)
+                  hasExpensesForBudget = expensesResponse.success && expensesResponse.expenses && expensesResponse.expenses.length > 0
+                } catch (err) {
+                  console.error('Error loading expenses for budget:', budget.id, err)
+                }
+              }
+              
               return {
                 ...budget,
-                hasTabs: tabsResponse.success && tabsResponse.tabs && tabsResponse.tabs.length > 0
+                hasTabs,
+                hasExpenses: hasExpensesForBudget
               }
             } catch (err) {
               console.error('Error loading tabs for budget:', budget.id, err)
-              return { ...budget, hasTabs: false }
+              return { ...budget, hasTabs: false, hasExpenses: false }
             }
           })
         )
         setBudgetsWithTabs(budgetsWithTabsData)
+        
+        // Check if any budget has expenses
+        const anyExpenses = budgetsWithTabsData.some(b => b.hasExpenses)
+        setHasExpenses(anyExpenses)
       } else {
         console.error('Budget API returned unsuccessful response:', response)
       }
@@ -332,8 +351,8 @@ export default function Dashboard() {
                 <span className="mr-2">{budgetsWithTabs.some(b => b.hasTabs) ? '✅' : '⏳'}</span>
                 <span>Add budget categories</span>
               </div>
-              <div className="flex items-center text-gray-400">
-                <span className="mr-2">⏳</span>
+              <div className={`flex items-center ${hasExpenses ? 'text-green-600' : 'text-gray-400'}`}>
+                <span className="mr-2">{hasExpenses ? '✅' : '⏳'}</span>
                 <span>Start tracking expenses</span>
               </div>
             </div>
