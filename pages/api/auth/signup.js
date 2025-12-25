@@ -66,6 +66,23 @@ export default async function handler(req, res) {
     // Get Supabase client
     const supabase = getSupabaseClient() // Synchronous - no await needed
     
+    // Determine the site URL for email verification redirect
+    // Try environment variable first, then derive from request headers
+    let siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+    if (!siteUrl) {
+      // Fallback: derive from request headers (for production deployments)
+      // This works when deployed to platforms like Vercel, Netlify, etc.
+      const protocol = req.headers['x-forwarded-proto']?.split(',')[0] || 
+                      (req.connection?.encrypted ? 'https' : 'http')
+      const host = req.headers['x-forwarded-host'] || req.headers.host
+      if (host) {
+        siteUrl = `${protocol}://${host}`
+      } else {
+        // Last resort: use localhost (development only)
+        siteUrl = 'http://localhost:3000'
+      }
+    }
+    
     // Sign up the user with Supabase Auth
     // This will:
     // 1. Create the user in auth.users
@@ -76,7 +93,7 @@ export default async function handler(req, res) {
       password,
       options: {
         data: metadata, // This metadata will be used by the trigger to populate user_profiles
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`
+        emailRedirectTo: `${siteUrl}/login` // Redirect to login page after email verification
       }
     })
 

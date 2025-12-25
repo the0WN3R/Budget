@@ -49,8 +49,9 @@ export default function BackgroundMusic() {
   const audioRef = useRef(null)
   const [musicStyle, setMusicStyle] = useState('soft-muted')
   const [volume, setVolume] = useState(30) // Default 30%
+  const [isEnabled, setIsEnabled] = useState(true) // Default to enabled
 
-  // Load music style and volume preferences from localStorage
+  // Load music style, volume, and enabled state from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedStyle = localStorage.getItem('backgroundMusicStyle')
@@ -62,6 +63,10 @@ export default function BackgroundMusic() {
       if (savedVolume !== null) {
         setVolume(parseInt(savedVolume, 10))
       }
+
+      // Check if music is enabled (default to true if not set)
+      const savedEnabled = localStorage.getItem('backgroundMusicEnabled')
+      setIsEnabled(savedEnabled === null ? true : savedEnabled === 'true')
     }
   }, [])
 
@@ -86,30 +91,38 @@ export default function BackgroundMusic() {
           setVolume(e.detail)
         }
       }
+
+      const handleToggleChange = (e) => {
+        if (e.detail !== null && e.detail !== undefined) {
+          setIsEnabled(e.detail)
+        }
+      }
       
       window.addEventListener('musicStyleChange', handleStyleChange)
       window.addEventListener('musicVolumeChange', handleVolumeChange)
+      window.addEventListener('musicToggleChange', handleToggleChange)
       return () => {
         window.removeEventListener('musicStyleChange', handleStyleChange)
         window.removeEventListener('musicVolumeChange', handleVolumeChange)
+        window.removeEventListener('musicToggleChange', handleToggleChange)
       }
     }
   }, [])
 
-  // Auto-play music when style changes or component mounts - ALWAYS play
+  // Auto-play music when style changes or component mounts, but only if enabled
   useEffect(() => {
-    if (audioRef.current) {
-      // Try to play immediately - always play, regardless of volume
+    if (audioRef.current && isEnabled) {
+      // Try to play immediately
       const playAudio = () => {
-        if (audioRef.current) {
+        if (audioRef.current && isEnabled) {
           audioRef.current.play().catch(err => {
             // If autoplay is blocked, try again after a short delay
             setTimeout(() => {
-              if (audioRef.current) {
+              if (audioRef.current && isEnabled) {
                 audioRef.current.play().catch(() => {
                   // Try one more time after another delay
                   setTimeout(() => {
-                    if (audioRef.current) {
+                    if (audioRef.current && isEnabled) {
                       audioRef.current.play().catch(() => {
                         // Silently handle autoplay restrictions
                       })
@@ -132,24 +145,35 @@ export default function BackgroundMusic() {
         clearTimeout(timer)
         clearTimeout(timer2)
       }
+    } else if (audioRef.current && !isEnabled) {
+      // Pause if disabled
+      audioRef.current.pause()
     }
-  }, [musicStyle])
+  }, [musicStyle, isEnabled])
 
-  // Update volume when it changes - music always plays, just at different volumes
+  // Handle enabled state changes
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    
+    if (isEnabled) {
+      // Try to play when enabled
+      audio.play().catch(() => {
+        // Silently handle if autoplay is blocked
+      })
+    } else {
+      // Pause when disabled
+      audio.pause()
+    }
+  }, [isEnabled])
+
+  // Update volume when it changes
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
     
     // Convert volume from 0-100 to 0-1
-    // Even at 0, the audio still plays (just silent)
     audio.volume = volume / 100
-    
-    // Always ensure audio is playing (volume can be 0 but audio still runs)
-    if (audio.paused) {
-      audio.play().catch(() => {
-        // Silently handle if autoplay is blocked
-      })
-    }
   }, [volume])
 
   useEffect(() => {
@@ -157,9 +181,11 @@ export default function BackgroundMusic() {
     if (!audio) return
 
     const handleEnded = () => {
-      // Loop the music
-      audio.currentTime = 0
-      audio.play().catch(err => console.log('Error replaying music:', err))
+      // Loop the music if enabled
+      if (isEnabled) {
+        audio.currentTime = 0
+        audio.play().catch(err => console.log('Error replaying music:', err))
+      }
     }
 
     audio.addEventListener('ended', handleEnded)
@@ -167,7 +193,7 @@ export default function BackgroundMusic() {
     return () => {
       audio.removeEventListener('ended', handleEnded)
     }
-  }, [])
+  }, [isEnabled])
 
   const currentStyle = MUSIC_STYLES[musicStyle] || MUSIC_STYLES['soft-muted']
 

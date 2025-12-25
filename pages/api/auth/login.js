@@ -195,11 +195,11 @@ export default async function handler(req, res) {
     // Ensure we always return JSON, even on unexpected errors
     // This helps with the "Unexpected end of JSON input" error
     if (!res.headersSent) {
-      return res.status(500).json({
-        error: 'Internal server error',
+    return res.status(500).json({
+      error: 'Internal server error',
         message: error.message || 'An unexpected error occurred during login',
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      })
+    })
     }
   }
 }

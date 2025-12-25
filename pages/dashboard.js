@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [hasExpenses, setHasExpenses] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [budgetsLoading, setBudgetsLoading] = useState(true)
+  const [musicEnabled, setMusicEnabled] = useState(true)
 
   useEffect(() => {
     // Check if user is authenticated
@@ -39,6 +40,11 @@ export default function Dashboard() {
       if (savedProfile) {
         setProfile(JSON.parse(savedProfile))
       }
+
+      // Load music enabled state (default to true if not set)
+      const savedMusicEnabled = localStorage.getItem('backgroundMusicEnabled')
+      const isEnabled = savedMusicEnabled === null ? true : savedMusicEnabled === 'true'
+      setMusicEnabled(isEnabled)
     }
 
     setIsLoading(false)
@@ -58,6 +64,17 @@ export default function Dashboard() {
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
+
+  const toggleMusic = () => {
+    if (typeof window !== 'undefined') {
+      const newState = !musicEnabled
+      setMusicEnabled(newState)
+      localStorage.setItem('backgroundMusicEnabled', String(newState))
+      
+      // Dispatch custom event to notify BackgroundMusic component
+      window.dispatchEvent(new CustomEvent('musicToggleChange', { detail: newState }))
+    }
+  }
 
   const loadBudgets = async () => {
     try {
@@ -359,6 +376,50 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Music Toggle Button - Bottom Right */}
+      <button
+        onClick={toggleMusic}
+        className="fixed bottom-6 right-6 z-50 bg-white hover:bg-gray-50 border-2 border-gray-300 rounded-full p-4 shadow-lg transition-all duration-200 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        aria-label={musicEnabled ? 'Turn off music' : 'Turn on music'}
+        title={musicEnabled ? 'Turn off music' : 'Turn on music'}
+      >
+        {musicEnabled ? (
+          <svg
+            className="w-6 h-6 text-gray-700"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fillRule="evenodd"
+              d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.793L4.383 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.383l4-4.617a1 1 0 011.617-.307zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z"
+              clipRule="evenodd"
+            />
+          </svg>
+        ) : (
+          <svg
+            className="w-6 h-6 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
+            />
+          </svg>
+        )}
+      </button>
     </Layout>
   )
 }
