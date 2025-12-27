@@ -19,33 +19,17 @@ export default function Settings() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
-  const [musicStyle, setMusicStyle] = useState('soft-muted')
   const [musicVolume, setMusicVolume] = useState(30)
 
-  // Load music style and volume preferences from localStorage
+  // Load music volume preference from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedStyle = localStorage.getItem('backgroundMusicStyle')
-      if (savedStyle) {
-        setMusicStyle(savedStyle)
-      }
-      
       const savedVolume = localStorage.getItem('backgroundMusicVolume')
       if (savedVolume !== null) {
         setMusicVolume(parseInt(savedVolume, 10))
       }
     }
   }, [])
-
-  const handleMusicStyleChange = (style) => {
-    setMusicStyle(style)
-    localStorage.setItem('backgroundMusicStyle', style)
-    
-    // Dispatch event to update BackgroundMusic component
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('musicStyleChange', { detail: style }))
-    }
-  }
 
   const handleVolumeChange = (e) => {
     const newVolume = parseInt(e.target.value, 10)
@@ -199,6 +183,16 @@ export default function Settings() {
               Contact Support
             </button>
             <button
+              onClick={() => setActiveSection('about')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeSection === 'about'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              About
+            </button>
+            <button
               onClick={() => setActiveSection('danger')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeSection === 'danger'
@@ -298,112 +292,44 @@ export default function Settings() {
                 </div>
               </div>
 
-              {/* Music Style Selection */}
+              {/* Background Music Volume */}
               <div className="pt-6 border-t border-gray-200">
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Background Music Style
+                  Background Music Volume: {musicVolume}%
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Soft & Muted */}
-                  <button
-                    onClick={() => handleMusicStyleChange('soft-muted')}
-                    className={`p-4 border-2 rounded-lg text-left transition-all ${
-                      musicStyle === 'soft-muted'
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-gray-900">Soft & Muted</span>
-                      {musicStyle === 'soft-muted' && (
-                        <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600">Peaceful classic grand piano</p>
-                  </button>
-
-                  {/* Funky/Pop */}
-                  <button
-                    onClick={() => handleMusicStyleChange('funky-pop')}
-                    className={`p-4 border-2 rounded-lg text-left transition-all ${
-                      musicStyle === 'funky-pop'
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-gray-900">Funky/Pop</span>
-                      {musicStyle === 'funky-pop' && (
-                        <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600">Upbeat and energetic</p>
-                  </button>
-
-                  {/* Classical */}
-                  <button
-                    onClick={() => handleMusicStyleChange('classical')}
-                    className={`p-4 border-2 rounded-lg text-left transition-all ${
-                      musicStyle === 'classical'
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-gray-900">Classical</span>
-                      {musicStyle === 'classical' && (
-                        <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600">Orchestra and symphony</p>
-                  </button>
-                </div>
-
-                {/* Volume Control */}
-                <div className="pt-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Volume: {musicVolume}%
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={musicVolume}
-                      onChange={handleVolumeChange}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      style={{
-                        background: `linear-gradient(to right, #2563eb 0%, #2563eb ${musicVolume}%, #e5e7eb ${musicVolume}%, #e5e7eb 100%)`
-                      }}
-                    />
-                    <style jsx>{`
-                      .slider::-webkit-slider-thumb {
-                        appearance: none;
-                        width: 20px;
-                        height: 20px;
-                        border-radius: 50%;
-                        background: #2563eb;
-                        cursor: pointer;
-                        border: 2px solid #2563eb;
-                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-                      }
-                      .slider::-moz-range-thumb {
-                        width: 20px;
-                        height: 20px;
-                        border-radius: 50%;
-                        background: #2563eb;
-                        cursor: pointer;
-                        border: 2px solid #2563eb;
-                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-                      }
-                    `}</style>
-                  </div>
+                <div className="relative">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={musicVolume}
+                    onChange={handleVolumeChange}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    style={{
+                      background: `linear-gradient(to right, #2563eb 0%, #2563eb ${musicVolume}%, #e5e7eb ${musicVolume}%, #e5e7eb 100%)`
+                    }}
+                  />
+                  <style jsx>{`
+                    .slider::-webkit-slider-thumb {
+                      appearance: none;
+                      width: 20px;
+                      height: 20px;
+                      border-radius: 50%;
+                      background: #2563eb;
+                      cursor: pointer;
+                      border: 2px solid #2563eb;
+                      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                    }
+                    .slider::-moz-range-thumb {
+                      width: 20px;
+                      height: 20px;
+                      border-radius: 50%;
+                      background: #2563eb;
+                      cursor: pointer;
+                      border: 2px solid #2563eb;
+                      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                    }
+                  `}</style>
                 </div>
               </div>
             </div>
@@ -472,6 +398,23 @@ export default function Settings() {
                 </Button>
               </div>
             </form>
+          </Card>
+        )}
+
+        {/* About */}
+        {activeSection === 'about' && (
+          <Card title="About">
+            <div className="space-y-4">
+              <div>
+                <p>Music: The Intrepid Servant</p>
+                <p>By: Justin Allan Arnold</p>
+                <p>Source: <a href="https://www.ifnessfreemusic.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">https://www.ifnessfreemusic.com</a></p>
+              </div>
+              <div>
+                <p>License: Creative Commons Attribution 4.0</p>
+                <p><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">https://creativecommons.org/licenses/by/4.0/</a></p>
+              </div>
+            </div>
           </Card>
         )}
 

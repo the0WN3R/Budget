@@ -1,64 +1,26 @@
 /**
  * Background Music Component
- * Plays pleasant background music with multiple style options:
- * - Soft & Muted: Peaceful classic grand piano
- * - Funky/Pop: Upbeat and energetic
- * - Classical: Orchestra and symphony
+ * Plays background music on loop
  * 
- * To use custom music files, add them to /public/music/:
- * - soft-muted.mp3 (peaceful grand piano)
- * - funky-pop.mp3
- * - classical.mp3 (orchestra/symphony)
+ * To add your music file:
+ * 1. Place your MP3 file in /public/music/
+ * 2. Update the MUSIC_FILE_PATH constant below with your filename
  */
 
 import { useEffect, useRef, useState } from 'react'
 
-// Music style configurations
-const MUSIC_STYLES = {
-  'soft-muted': {
-    name: 'Soft & Muted',
-    description: 'Peaceful classic grand piano',
-    sources: [
-      '/music/soft-muted.mp3', // Local file takes priority - add peaceful grand piano music here
-      // If you have a direct URL to grand piano music, add it here:
-      // 'https://your-music-cdn.com/grand-piano.mp3'
-      'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' // Temporary placeholder - replace with actual grand piano music
-    ]
-  },
-  'funky-pop': {
-    name: 'Funky/Pop',
-    description: 'Upbeat and energetic',
-    sources: [
-      '/music/funky-pop.mp3',
-      'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'
-    ]
-  },
-  'classical': {
-    name: 'Classical',
-    description: 'Orchestra and symphony',
-    sources: [
-      '/music/classical.mp3', // Local file takes priority - add orchestra/symphony music here
-      // If you have a direct URL to orchestra/symphony music, add it here:
-      // 'https://your-music-cdn.com/orchestra.mp3'
-      'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' // Temporary placeholder - replace with actual orchestra/symphony music
-    ]
-  }
-}
+// Path to your music file (relative to /public directory)
+// Example: '/music/background-music.mp3'
+const MUSIC_FILE_PATH = '/music/Intrepid_Servant_By_Allan_Arnold.mp3'
 
 export default function BackgroundMusic() {
   const audioRef = useRef(null)
-  const [musicStyle, setMusicStyle] = useState('soft-muted')
   const [volume, setVolume] = useState(30) // Default 30%
   const [isEnabled, setIsEnabled] = useState(true) // Default to enabled
 
-  // Load music style, volume, and enabled state from localStorage
+  // Load volume and enabled state from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedStyle = localStorage.getItem('backgroundMusicStyle')
-      if (savedStyle && MUSIC_STYLES[savedStyle]) {
-        setMusicStyle(savedStyle)
-      }
-      
       const savedVolume = localStorage.getItem('backgroundMusicVolume')
       if (savedVolume !== null) {
         setVolume(parseInt(savedVolume, 10))
@@ -70,22 +32,9 @@ export default function BackgroundMusic() {
     }
   }, [])
 
-  // Listen for music style changes from settings
+  // Listen for volume and toggle changes from settings
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const handleStyleChange = (e) => {
-        if (e.detail && MUSIC_STYLES[e.detail]) {
-          setMusicStyle(e.detail)
-          if (audioRef.current) {
-            // Reload audio with new source
-            audioRef.current.load()
-            audioRef.current.play().catch(err => {
-              console.log('Error playing new music style:', err)
-            })
-          }
-        }
-      }
-      
       const handleVolumeChange = (e) => {
         if (e.detail !== null && e.detail !== undefined) {
           setVolume(e.detail)
@@ -98,18 +47,16 @@ export default function BackgroundMusic() {
         }
       }
       
-      window.addEventListener('musicStyleChange', handleStyleChange)
       window.addEventListener('musicVolumeChange', handleVolumeChange)
       window.addEventListener('musicToggleChange', handleToggleChange)
       return () => {
-        window.removeEventListener('musicStyleChange', handleStyleChange)
         window.removeEventListener('musicVolumeChange', handleVolumeChange)
         window.removeEventListener('musicToggleChange', handleToggleChange)
       }
     }
   }, [])
 
-  // Auto-play music when style changes or component mounts, but only if enabled
+  // Auto-play music when component mounts, but only if enabled
   useEffect(() => {
     if (audioRef.current && isEnabled) {
       // Try to play immediately
@@ -149,7 +96,7 @@ export default function BackgroundMusic() {
       // Pause if disabled
       audioRef.current.pause()
     }
-  }, [musicStyle, isEnabled])
+  }, [isEnabled])
 
   // Handle enabled state changes
   useEffect(() => {
@@ -184,7 +131,9 @@ export default function BackgroundMusic() {
       // Loop the music if enabled
       if (isEnabled) {
         audio.currentTime = 0
-        audio.play().catch(err => console.log('Error replaying music:', err))
+        audio.play().catch(() => {
+          // Silently handle replay errors
+        })
       }
     }
 
@@ -195,20 +144,15 @@ export default function BackgroundMusic() {
     }
   }, [isEnabled])
 
-  const currentStyle = MUSIC_STYLES[musicStyle] || MUSIC_STYLES['soft-muted']
-
   return (
     <audio
-      key={musicStyle} // Force re-render when style changes
       ref={audioRef}
       loop
       preload="auto"
       autoPlay
       style={{ display: 'none' }}
     >
-      {currentStyle.sources.map((src, index) => (
-        <source key={index} src={src} type="audio/mpeg" />
-      ))}
+      <source src={MUSIC_FILE_PATH} type="audio/mpeg" />
       Your browser does not support the audio element.
     </audio>
   )
