@@ -393,10 +393,7 @@ export default function BudgetView() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">No tabs/categories added to this budget yet.</p>
-              <Button variant="primary" onClick={handleEdit}>
-                Add Categories
-              </Button>
+              <p className="text-gray-500">No tabs/categories added to this budget yet.</p>
             </div>
           )}
         </Card>
