@@ -56,7 +56,7 @@ export default function Layout({ children, requiresAuth = false }) {
           <div className={isMobile ? "px-4" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"}>
             <div className="flex justify-between h-16">
               <div className="flex items-center">
-                <h1 className="text-xl font-bold text-blue-600">Budget App</h1>
+                <h1 className="text-xl font-bold text-blue-600">Owner&apos;s Budget</h1>
               </div>
               <div className="flex items-center space-x-4">
                 <button
@@ -86,7 +86,7 @@ export default function Layout({ children, requiresAuth = false }) {
       <footer className="bg-white border-t border-gray-200 mt-12">
         <div className={isMobile ? "px-4 py-4" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4"}>
           <p className="text-center text-gray-500 text-sm">
-            © 2024 Budget App. Built with Next.js & Supabase.
+            © 2024 Owner&apos;s Budget. Built with Next.js & Supabase.
           </p>
         </div>
       </footer>
